@@ -1,0 +1,21 @@
+{
+    "name": "classrouter",
+    "version": "3.0.0",
+    "description": "typescript expressjs class router",
+    "main": "./lib/index.js",
+    "types": "./lib/index.d.ts",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "tsc": "tsc -p tsconfig-prod.json"
+    },
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "express": "^4.16.2",
+        "reflect-metadata": "^0.1.12"
+    },
+    "devDependencies": {
+        "@types/node": "^9.3.0",
+        "typescript": "^2.6.2"
+    }
+}
