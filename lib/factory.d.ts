@@ -23,7 +23,7 @@ export declare class ClassrouterFactory {
     log(...msg: any[]): void;
     logError(error: HttpException): void;
     setupController(ctrlType: IControllerType, parent: express.Router, basePath: string): Promise<void>;
-    resolveValue(type: Paramtype, fieldname: string | null, req: express.Request): Promise<any>;
+    resolveValue(type: Paramtype, fieldnames: string[], req: express.Request): Promise<any>;
     transformValue(startValue: any, pipes: IPipeTransform[]): Promise<any>;
     result(actionResult: any, req: express.Request, res: express.Response): Promise<void>;
     errorParse(error: any): HttpException;

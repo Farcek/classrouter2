@@ -5,14 +5,14 @@ import { IPipeTransform } from '../pipe/interface'
 
 export class ParamMetadata {
     propery: string
-    fieldname: string | null
+    fieldname: string[]
     type: Paramtype;
     pipes: IPipeTransform[] = [];
 }
 
 export class ArgumentMetadata {
     index: number
-    fieldname: string | null
+    fieldname: string[]
     type: Paramtype;
     pipes: IPipeTransform[] = [];
 }

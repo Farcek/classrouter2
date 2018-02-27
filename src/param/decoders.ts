@@ -6,21 +6,31 @@ import { ParamMetadata, ArgumentMetadata } from './metadata';
 
 
 function createParamDecoder(type: Paramtype) {
-    return (fieldname?: string | IPipeTransform, ...pipes: IPipeTransform[]) => {
-        return (target: object, property: string , parameterIndex?: number) => {
+    return (fieldname?: string | string[] | IPipeTransform, ...pipes: IPipeTransform[]) => {
+        return (target: object, property: string, parameterIndex?: number) => {
 
-            let reqName: string | null = null;
+            let reqName: string[] = [];
             let _pipes: IPipeTransform[];
 
             if (fieldname && typeof fieldname === 'string') {
+                reqName = [fieldname];
+            }
+
+            if (fieldname && Array.isArray(fieldname)) {
                 reqName = fieldname;
             }
+
 
             if (fieldname && (fieldname as IPipeTransform).transform) {
                 _pipes = [fieldname as IPipeTransform, ...pipes];
             } else {
                 _pipes = pipes;
             }
+
+
+
+
+
 
             let actionMeta = getOrCreateActionMetadata(target.constructor);
             if (typeof parameterIndex === 'number') {
@@ -30,7 +40,7 @@ function createParamDecoder(type: Paramtype) {
                 meta.pipes = _pipes;
                 meta.type = type;
 
-                if (property === 'action') {                    
+                if (property === 'action') {
                     actionMeta.actionArguments[parameterIndex] = meta;
                 } else if (property === 'onError') {
                     actionMeta.errorArguments[parameterIndex] = meta;
