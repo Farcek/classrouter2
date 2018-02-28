@@ -78,12 +78,15 @@ export class ClassrouterFactory {
     async resolveValue(type: Paramtype, fieldnames: string[], req: express.Request) {
 
         let find = (store: any) => {
+            if (fieldnames.length == 0) {
+                return store
+            }
             for (let f of fieldnames) {
                 if (f in store) {
                     return store[f];
                 }
             }
-            return store
+            return null;
         }
 
         if (type == Paramtype.Body) {
