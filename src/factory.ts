@@ -26,6 +26,11 @@ export interface IFactoryOptions {
     app: express.Application
     controllerTypes: IControllerType[]
     responseFilters: IResponseFilter[]
+
+    /**
+     * error action omno. app-routed zalgagdana
+     */
+    notFoundHandler?: (req: any, res: any, next: any) => void
 }
 export class ClassrouterFactory {
 
@@ -35,11 +40,14 @@ export class ClassrouterFactory {
     controllerTypes: IControllerType[]
 
     responseFilters: IResponseFilter[]
+    notFoundHandler?: (req: any, res: any, next: any) => void
+
     constructor(options: IFactoryOptions) {
         this.basepath = options.basepath;
         this.app = options.app;
         this.controllerTypes = options.controllerTypes;
         this.responseFilters = options.responseFilters;
+        this.notFoundHandler = options.notFoundHandler;
     }
 
     log(...msg: any[]) {
@@ -240,6 +248,11 @@ export class ClassrouterFactory {
     }
 
     setupErrorhandle() {
+
+        if (this.notFoundHandler) {
+            this.app.use(this.notFoundHandler);
+        }
+
         this.app.use((err: any, req: any, res: any, next: any) => {
             let _err = this.errorParse(err);
             this.result(_err, req, res);
