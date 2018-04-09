@@ -1,5 +1,5 @@
 {
-    "name": "classrouter",
+    "name": "classrouter2",
     "version": "3.0.1",
     "description": "typescript expressjs class router",
     "main": "./lib/index.js",
