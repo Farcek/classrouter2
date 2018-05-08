@@ -13,12 +13,17 @@ export interface IFactoryOptions {
     app: express.Application;
     controllerTypes: IControllerType[];
     responseFilters: IResponseFilter[];
+    /**
+     * error action omno. app-routed zalgagdana
+     */
+    notFoundHandler?: (req: any, res: any, next: any) => void;
 }
 export declare class ClassrouterFactory {
     app: express.Application;
     basepath?: string;
     controllerTypes: IControllerType[];
     responseFilters: IResponseFilter[];
+    notFoundHandler?: (req: any, res: any, next: any) => void;
     constructor(options: IFactoryOptions);
     log(...msg: any[]): void;
     logError(error: HttpException): void;

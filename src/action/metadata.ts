@@ -13,7 +13,7 @@ export class ActionMetadata {
     constructor() {
         console.log('action meta' + $.i++)
     }
-    method: HttpMethod
+    method: HttpMethod = HttpMethod.Get
     paths: string[] = ['/']
 
     properties: ParamMetadata[] = []
