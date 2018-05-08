@@ -1,5 +1,5 @@
 import "reflect-metadata";
-import { Container, ContainerInstance, Service, ObjectType } from "typedi";
+import { Container, ContainerInstance } from "typedi";
 
 import { IControllerType } from "./controller/interface";
 import { ControllerMetadata, getControllerMetadata } from "./controller/metadata";
@@ -18,8 +18,6 @@ import * as express from "express";
 
 
 const uuid = require('uuid');
-
-
 
 export interface IFactoryOptions {
     basepath?: string
@@ -74,8 +72,14 @@ export class ClassrouterFactory {
     }
 
 
+    defaultValue(ins: any, property: string) {
+        if (ins && property in ins) {
+            return ins[property];
+        }
+        return undefined;
+    }
 
-    async resolveValue(type: Paramtype, fieldnames: string[], req: express.Request) {
+    async resolveValue(type: Paramtype, fieldnames: string[], req: express.Request, defaultValue: any) {
 
         let find = (store: any) => {
             if (fieldnames.length == 0) {
@@ -86,7 +90,7 @@ export class ClassrouterFactory {
                     return store[f];
                 }
             }
-            return null;
+            return defaultValue;
         }
 
         if (type == Paramtype.Body) {
@@ -157,14 +161,15 @@ export class ClassrouterFactory {
                 try {
                     // bind properies
                     await Promise.all(aMeta.properties.map(async (prop) => {
-                        let initVal = await this.resolveValue(prop.type, prop.fieldname, req);
+                        let defaultvalue = this.defaultValue(actionInstance, prop.propery);
+                        let initVal = await this.resolveValue(prop.type, prop.fieldname, req, defaultvalue);
                         let value = await this.transformValue(initVal, prop.pipes);
                         (<any>actionInstance)[prop.propery] = value;
                     }));
 
                     // bind arguments
                     let actionArgs = await Promise.all(aMeta.actionArguments.map(async (prop) => {
-                        let initVal = await this.resolveValue(prop.type, prop.fieldname, req);
+                        let initVal = await this.resolveValue(prop.type, prop.fieldname, req, undefined);
                         let value = await this.transformValue(initVal, prop.pipes);
                         return value;
                     }));
@@ -179,7 +184,7 @@ export class ClassrouterFactory {
 
                     if (actionInstance.onError && typeof actionInstance.onError === 'function') {
                         let errorArgs = await Promise.all(aMeta.errorArguments.map(async (prop) => {
-                            let initVal = await this.resolveValue(prop.type, prop.fieldname, req);
+                            let initVal = await this.resolveValue(prop.type, prop.fieldname, req, undefined);
                             let value = await this.transformValue(initVal, prop.pipes);
                             return value;
                         }));
