@@ -1,8 +1,8 @@
 import "reflect-metadata";
-import { Container, ContainerInstance } from "typedi";
+
 
 import { IControllerType } from "./controller/interface";
-import { ControllerMetadata, getControllerMetadata } from "./controller/metadata";
+import { getControllerMetadata } from "./controller/metadata";
 
 import { IAction, IActionType } from "./action/interface";
 import { ActionMetadata, getActionMetadata } from "./action/metadata";
@@ -162,10 +162,10 @@ export class ClassrouterFactory {
 
 
 
-        const action = async (container: ContainerInstance, req: express.Request, res: express.Response) => {
+        const action = async (req: express.Request, res: express.Response) => {
 
             try {
-                let actionInstance = container.get(actionType);
+                let actionInstance = new actionType();
                 try {
                     // bind properies
                     await Promise.all(aMeta.properties.map(async (prop) => {
@@ -214,10 +214,7 @@ export class ClassrouterFactory {
 
         return (req: express.Request, res: express.Response) => {
             const rid = uuid();
-            action(Container.of(rid), req, res)
-                .then(() => {
-                    Container.reset(rid);
-                })
+            action(req, res);
         }
 
     }
