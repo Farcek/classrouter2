@@ -1,8 +1,8 @@
-
 import { Paramtype } from '../common/paramtype.enum';
 import { IPipeTransform } from '../pipe/interface';
 import { getOrCreateActionMetadata } from '../action/metadata';
 import { ParamMetadata, ArgumentMetadata } from './metadata';
+import { ClassType } from '@napp/common';
 
 
 function createParamDecoder(type: Paramtype) {
@@ -27,18 +27,21 @@ function createParamDecoder(type: Paramtype) {
                 _pipes = pipes;
             }
 
+            
+            
+            var refType = Reflect.getMetadata("design:type", target, property);
 
+            console.log(refType);
 
-
-
-
-            let actionMeta = getOrCreateActionMetadata(target.constructor);
+            let actionMeta = getOrCreateActionMetadata(target.constructor as ClassType);
             if (typeof parameterIndex === 'number') {
                 let meta = new ArgumentMetadata();
                 meta.fieldname = reqName;
+                meta.refType = refType;
                 meta.index = parameterIndex;
                 meta.pipes = _pipes;
                 meta.type = type;
+                
 
                 if (property === 'action') {
                     actionMeta.actionArguments[parameterIndex] = meta;
@@ -49,6 +52,7 @@ function createParamDecoder(type: Paramtype) {
             } else {
                 let paramMeta = new ParamMetadata();
                 paramMeta.fieldname = reqName;
+                paramMeta.refType = refType;
                 paramMeta.pipes = _pipes;
                 paramMeta.propery = property;
                 paramMeta.type = type;

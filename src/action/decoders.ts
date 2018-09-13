@@ -1,6 +1,7 @@
 import { HttpMethod } from '../common/http-method.enum';
-import { ActionMetadata, createActionMetadata, getOrCreateActionMetadata } from './metadata';
+import { getOrCreateActionMetadata } from './metadata';
 import { IMiddlewareFactory } from '../middleware/interface';
+import { ClassType } from '@napp/common';
 
 
 export interface IActionOptions {
@@ -11,7 +12,7 @@ export interface IActionOptions {
 function createActionDecoder(method: HttpMethod) {
     return (options?: IActionOptions): ClassDecorator => {
         return (target: object) => {
-            let meta = getOrCreateActionMetadata(target);
+            let meta = getOrCreateActionMetadata(target as ClassType);
             meta.method = method;
             if (options) {
                 if (options.path && Array.isArray(options.path)) {

@@ -9,6 +9,7 @@ import { IMiddlewareFactory } from '../middleware/interface';
 
 
 export class ControllerMetadata {
+    name =""
     path: string = '/'
     actions: IActionType[] = []
     childControllers: IControllerType[] = []

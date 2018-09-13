@@ -5,6 +5,7 @@ import { LoginAction } from './login.action';
 
 
 @Controller({
+    name : "login",
     path: '/login',
     actions: [FormAction, LoginAction]
 })

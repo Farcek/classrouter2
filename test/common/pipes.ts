@@ -31,6 +31,7 @@ export class PagingPipe implements IPipeTransform {
 }
 
 
+
 export interface IUser {
     id: number
     name: string
@@ -40,7 +41,7 @@ export class UserPipe implements IPipeTransform {
 
         return {
             id: 1,
-            name: 'foo'
+            name: 'foo ' + Date.now()
         }
     }
 }

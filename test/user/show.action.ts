@@ -1,21 +1,30 @@
 
-import { BodyParam, QueryParam, Get, IAction, ViewResponse } from '../../src/actions';
+import { BodyParam, QueryParam, Get, IAction, ViewResponse, PathParam } from '../../src/actions';
 import { InvalidMessageException } from '../../src/exceptions';
 
 
 import { IntPipe } from '../common/pipes';
 
+export class TestID{
+    id = ""
+}
 
 @Get({
-    path: '/show'
+    path: '/show/:id'
 })
 export class ShowAction implements IAction {
 
     @QueryParam('id', new IntPipe())
     private id: number
 
+    /**
+     * param names
+     */
+    @PathParam('id', new IntPipe())
+    private idPath: number 
+
     @QueryParam()
-    private allQueryParams: { id: string }
+    private allQueryParams: TestID
 
     action() {
         if (this.id < 1) {
@@ -28,11 +37,11 @@ export class ShowAction implements IAction {
         });
     }
 
-    onError(err: any, @QueryParam() id: string) {
+    onError(err: any) {
         return new ViewResponse('load', {
             error: err,
             message: "hello",
-            id: id
+            id: this.id
         });
     }
 }

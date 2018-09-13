@@ -5,17 +5,28 @@
     "main": "./lib/index.js",
     "types": "./lib/index.d.ts",
     "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1",
+        "test1": "tsc && node dist/test/serve.js",
+        "test": "tsc && mocha --reporter spec --require ts-node/register  **/*.test.ts",
         "tsc": "tsc -p tsconfig-prod.json"
     },
     "author": "",
     "license": "ISC",
     "dependencies": {
-        "express": "^4.16.2"        
+        "@napp/common": "^1.1.0",
+        "express": "^4.16.2",
+        "reflect-metadata": "^0.1.12",
+        "swagger-ui-express": "^4.0.1",
+        "uuid": "^3.3.2"
     },
     "devDependencies": {
+        "@types/chai": "^4.1.4",
         "@types/express": "^4.11.1",
         "@types/node": "^9.3.0",
-        "typescript": "^2.6.2"
+        "chai": "^4.1.2",
+        "mocha": "^5.2.0",
+        "mocha-typescript": "^1.1.17",
+        "nodemon": "^1.18.4",
+        "ts-node": "^7.0.1",
+        "typescript": "^2.9.2"
     }
 }

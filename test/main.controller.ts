@@ -5,7 +5,7 @@ import { ApiController } from './api/api.controller';
 
 
 @Controller({
-    controllers: [UserController, LoginController, ApiController]
+    controllers: [ApiController]
 })
 export class MainController {
 

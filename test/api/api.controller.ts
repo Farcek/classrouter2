@@ -4,6 +4,7 @@ import { UserController } from './user/user.controller';
 
 
 @Controller({
+    name : "api",
     path: '/api',
     controllers: [UserController]
 })

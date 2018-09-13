@@ -7,10 +7,13 @@ import { ShowAction } from './show.action';
 
 
 @Controller({
+    name: "user",
     path: '/user/:userid',
-    actions: [ChangepassAction, UpdateAction, ShowAction]
+    actions: [ChangepassAction
+           , UpdateAction, ShowAction
+    ]
 })
 export class UserController {
 
-    
+
 }

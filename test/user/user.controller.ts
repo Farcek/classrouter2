@@ -5,6 +5,7 @@ import { ShowAction } from './show.action';
 
 
 @Controller({
+    name : "user",
     path: '/user',
     actions: [ShowAction, ListAction]
 })

@@ -6,6 +6,7 @@ import { IMiddlewareFactory } from '../middleware/interface';
 
 
 export interface IControllerOption {
+    name?: string
     path?: string
     actions?: IActionType[]
     controllers?: IControllerType[]
@@ -16,7 +17,9 @@ export interface IControllerOption {
 export function Controller(option: IControllerOption): ClassDecorator {
     return (target: object) => {
         let meta = createControllerMetadata(target);
+        if (option.name) meta.name = option.name;
         if (option.path) meta.path = option.path;
+
         if (Array.isArray(option.actions)) meta.actions = option.actions
         if (Array.isArray(option.controllers)) meta.childControllers = option.controllers
         if (Array.isArray(option.befores)) meta.beforeMiddlewares = option.befores

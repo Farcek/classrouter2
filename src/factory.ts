@@ -4,7 +4,7 @@ import "reflect-metadata";
 import { IControllerType } from "./controller/interface";
 import { getControllerMetadata } from "./controller/metadata";
 
-import { IAction, IActionType } from "./action/interface";
+import { IActionType } from "./action/interface";
 import { ActionMetadata, getActionMetadata } from "./action/metadata";
 import { IPipeTransform } from "./pipe/interface";
 import { IResponseFilter, IFilterParam } from "./response/interface";
@@ -229,19 +229,19 @@ export class ClassrouterFactory {
         aMeta.paths.map(path => {
             if (aMeta.method == HttpMethod.Get) {
                 router.get(path, handlers);
-                this.log(`register action: GET ${basepath}-${path}`);
+                this.log(`register action: GET ${basepath}${path}`);
             } else if (aMeta.method == HttpMethod.Post) {
                 router.post(path, handlers);
-                this.log(`register action: POST ${basepath}-${path}`);
+                this.log(`register action: POST ${basepath}${path}`);
             } else if (aMeta.method == HttpMethod.Put) {
                 router.put(path, handlers);
-                this.log(`register action: PUT ${basepath}-${path}`);
+                this.log(`register action: PUT ${basepath}${path}`);
             } else if (aMeta.method == HttpMethod.Delete) {
                 router.delete(path, handlers);
-                this.log(`register action: DEL ${basepath}-${path}`);
+                this.log(`register action: DEL ${basepath}${path}`);
             } else if (aMeta.method == HttpMethod.All) {
                 router.all(path, handlers);
-                this.log(`register action: ALL ${basepath}-${path}`);
+                this.log(`register action: ALL ${basepath}${path}`);
             } else {
                 throw new Error("not suported method");
             }
