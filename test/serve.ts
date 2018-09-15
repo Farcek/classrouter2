@@ -23,7 +23,7 @@ async function boostrap() {
 
     await classrouter.initlize();
 
-    app.get("/api.json", new ApiDocSwagger(classrouter).action());
+    app.get("/api.json", new ApiDocSwagger(MainController).action());
 
     app.use('/docs', swaggerUi.serve, swaggerUi.setup(null, options));
 

@@ -2,11 +2,14 @@ import { ClassType, ReflectProperty, ReflectVariable, VariablePrimitiveType, Ref
 
 
 
+
+
+
 function typeMap(vt: VariablePrimitiveType) {
     if (vt === VariablePrimitiveType.Boolean) return { type: "boolean" };
-    if (vt === VariablePrimitiveType.Date) return { type: "date" };
-    if (vt === VariablePrimitiveType.Float) return { type: "float" };
-    if (vt === VariablePrimitiveType.Int) return { type: "int" };
+    if (vt === VariablePrimitiveType.Date) return { type: "string", format: "date" };
+    if (vt === VariablePrimitiveType.Float) return { type: "number" };
+    if (vt === VariablePrimitiveType.Int) return { type: "integer" };
     if (vt === VariablePrimitiveType.String) return { type: "string" };
 
     return { type: "null" };
@@ -14,19 +17,29 @@ function typeMap(vt: VariablePrimitiveType) {
 }
 
 
-export function schemaFactoryForMeta(vMeta: VariableMeta, schemas: { [key: string]: any }) {
+export function schemaFactoryForMeta(vMeta: VariableMeta, schemas: { [key: string]: any }): any {
+    if (vMeta.IsArray && vMeta.ArrayElement) {
+        return {
+            type: 'array',
+            items: schemaFactoryForMeta(vMeta.ArrayElement, schemas)
+        };
+    }
     if (vMeta.IsPrimary) {
         return typeMap(vMeta.Type);
     } else {
-        return schemaFactory(vMeta.TypeRef, schemas);
+        return schemaFactory(vMeta.TypeRef, false, schemas);
     }
 }
-export function schemaFactory(refType: ClassType, schemas: { [key: string]: any }) {
+export function schemaFactory(refType: ClassType, isArray: boolean, schemas: { [key: string]: any }): any {
 
+    if (isArray) {
+        return {
+            type: 'array',
+            items: schemaFactory(refType, false, schemas)
+        }
+    }
 
     let refMeta = ReflectVariable.factoryVariableMeta(refType);
-
-    
 
     if (refMeta.IsPrimary) {
         return typeMap(refMeta.Type);
@@ -44,6 +57,7 @@ export function schemaFactory(refType: ClassType, schemas: { [key: string]: any 
         let pMeta = ReflectProperty.GetProperiesMeta(refType);
         pMeta.map((p) => {
             let vMeta = ReflectVariable.getVariableMeta(refType, p);
+            console.log("vMeta", p, vMeta);
             if (vMeta) {
                 schema.properties[p] = schemaFactoryForMeta(vMeta, schemas);
             }

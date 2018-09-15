@@ -3,5 +3,5 @@ export declare enum HttpMethod {
     Post = 2,
     Put = 3,
     Delete = 4,
-    All = 5,
+    All = 5
 }

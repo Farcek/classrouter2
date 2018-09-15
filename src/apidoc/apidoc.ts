@@ -1,130 +1,260 @@
-import { ClassrouterFactory } from "..";
 import { getControllerMetadata, ControllerMetadata } from "../controller/metadata";
 import { getActionMetadata, ActionMetadata } from "../action/metadata";
 import { Paramtype } from "../common/paramtype.enum";
 import { HttpMethod } from "../common/http-method.enum";
 import { ParamMetadata, ArgumentMetadata } from "../param/metadata";
-import { ReflectVariable, ReflectDescription } from "@napp/common";
+import { ReflectVariable, ReflectDescription, ClassType, ReflectMeta } from "@napp/common";
 
-import { VariableMeta } from "@napp/common";
-import { VariablePrimitiveType } from "@napp/common";
-import { schemaFactory, schemaFactoryForMeta } from "./openapi";
+import { schemaFactoryForMeta, schemaFactory } from "./openapi";
+
+export interface IApiDocInfo {
+    title: string;
+    version: string;
+
+    description?: string;
+
+    termsOfService?: string;
+    contact?: {
+        name: string;
+        url: string;
+        email: string;
+    };
+
+    license?: {
+        name: string;
+        url?: string;
+    }
+}
+
+export interface IApiDocServers {
+    [index: number]: { url: string, description: string }
+}
+
+export interface IApiDocResponse {
+    type: ClassType;
+    description?: string;
+
+    /**
+     * 
+     */
+    mediaType?: string;
+
+    isArray?: boolean;
+
+    status?: number;
+
+}
 
 export class ApiDocSwagger {
-    constructor(public factory: ClassrouterFactory) {
 
-        factory.controllerTypes.map((ctrlType) => {
-            let cMeta = getControllerMetadata(ctrlType);
-            this.controllerMap(cMeta, factory.basepath || '', '');
-        });
+    swaggerJson = {
+        openapi: "3.0.0",
+        info: {
+            "version": "1.0.1",
+            "title": "Api Service"
+        } as IApiDocInfo,
+        "servers": [
+            {
+                "url": "https://dev-server.com/v1",
+                "description": "Development server"
+            },
+            {
+                "url": "https://staging-server.com/v1",
+                "description": "Staging server"
+            },
+            {
+                "url": "https://api.prod-server.com/v1",
+                "description": "Production server"
+            }
+        ] as IApiDocServers,
+        // "host": "petstore.swagger.io",
+        // "basePath": "/api",
+        "schemes": [
+            "http",
+            "https"
+        ],
+        "consumes": [
+            "application/json"
+        ],
+        "produces": [
+            "application/json"
+        ],
+        paths: {
+
+        },
+        components: {
+            schemas: {
+
+            }
+        }
+
     }
 
+    constructor(public mainController: ClassType) {
 
 
-    // factoryTypeSchema(type: VariableMeta) {
-    //     if (type.Type === VariableType.Primitive) {
-    //         var t = "void";
-    //         switch (type.Refrence as VariablePrimitiveType) {
-    //             case VariablePrimitiveType.Boolean: t = "boolean"; break;
-    //             case VariablePrimitiveType.Date: t = "date"; break;
-    //             case VariablePrimitiveType.Float: t = "float"; break;
-    //             case VariablePrimitiveType.Int: t = "int"; break;
-    //             case VariablePrimitiveType.String: t = "string"; break;
-    //             case VariablePrimitiveType.Symbol: t = "symbol"; break;
-    //         }
-    //         return { type: t };
-    //     }
-    //     return {
-    //         $ref: ""
-    //     }
-    // }
+        let info: IApiDocInfo = Reflect.getMetadata("api:doc:info", mainController)
 
-    buildParam(p: ParamMetadata | ArgumentMetadata, paramType: string, aMeta: ActionMetadata) {
+
+        if (info) {
+            this.swaggerJson.info = info;
+        }
+
+        let servers: IApiDocServers = Reflect.getMetadata("api:doc:servers", mainController)
+
+
+        if (servers) {
+            this.swaggerJson.servers = servers;
+        }
+
+
+        let cMeta = getControllerMetadata(mainController);
+        this.controllerMap(cMeta, '', '');
+    }
+
+    buildParam(p: ParamMetadata | ArgumentMetadata, paramType: string, aMeta: ActionMetadata, requestBody: any) {
 
         if (p instanceof ParamMetadata) {
-            let pMeta = ReflectVariable.getVariableMeta(aMeta.actionClass, p.propery);
 
-            if (pMeta && p.fieldname) {
-                
+            let variableMeta = ReflectVariable.getVariableMeta(aMeta.actionClass, p.propery);
+
+            if (variableMeta && p.fieldname.length) {
+
+                let dMeta = ReflectDescription.getMeta(aMeta.actionClass, p.propery);
+
+                console.log("aaaaaaaaaaaaaaaaaaaaaaaaaaa", p.propery, variableMeta, )
+
                 return {
-                    name: p.fieldname.join(" | "),
+                    name: p.fieldname.join(" | ") || "*",
                     summary: `${p.fieldname} - su`,
-                    description: ReflectDescription.getMeta(aMeta.actionClass, p.propery) || "",
+                    description: dMeta && dMeta.Description || "",
                     in: paramType,
-                    schema: schemaFactoryForMeta(pMeta, this.swaggerJson.components.schemas)
+                    schema: schemaFactoryForMeta(variableMeta, this.swaggerJson.components.schemas)
+                };
+            }
+
+            if (variableMeta && p.fieldname.length == 0) {
+                let properyDescriptionMeta = ReflectDescription.getMeta(aMeta.actionClass, p.propery);
+                let modelDescriptionMeta = variableMeta.TypeRef && ReflectDescription.getMeta(variableMeta.TypeRef);
+
+                requestBody.description = (properyDescriptionMeta && properyDescriptionMeta.Description) || (modelDescriptionMeta && modelDescriptionMeta.Description) || "";
+                requestBody.required = true;
+                requestBody.content = {
+                    "application/json": {
+                        schema: schemaFactoryForMeta(variableMeta, this.swaggerJson.components.schemas)
+                    }
+                };
+
+                return false;
+            }
+        }
+
+        if (p instanceof ParamMetadata) {
+
+            return {
+                name: p.fieldname.join(" | "),
+                description: "my pram description",
+                in: paramType,
+                schema: {
+                    type: "string",
+                }
+            };
+
+        }
+    }
+
+    buildResponse(responseMetas: IApiDocResponse[]) {
+        if (responseMetas.length == 0) {
+            return {
+                "default": {
+                    "description": "not defined response"
                 }
             }
         }
 
+        let rest: any = {};
+
+        responseMetas.map((it) => {
+            let status = "" + (it.status || 200);
+
+            let dMeta = ReflectDescription.getMeta(it.type);
 
 
-
-        // let r = this.buildModel(<any>p.refType);
-        return {
-            name: p.fieldname.join(" | "),
-            description: "my pram description",
-            in: paramType,
-            schema: {
-                type: "string",
+            let description = it.description || (dMeta && dMeta.Description) || "";
+            let mt = it.mediaType || "application/json";
+            let schema = schemaFactory(it.type, it.isArray || false, this.swaggerJson.components.schemas);
+            rest[status] = {
+                description,
+                content: {
+                    [mt]: {
+                        schema
+                    }
+                }
             }
-        }
+        });
+
+        return rest;
     }
     actionMap(aMeta: ActionMetadata, basePath: string, controller: string) {
         let params: any[] = [];
+        let requestBody: any = {};
         aMeta.properties.map(p => {
+            let m: any;
             if (p.type == Paramtype.Path) {
-                params.push(this.buildParam(p, "path", aMeta));
+                m = this.buildParam(p, "path", aMeta, requestBody);
             } else if (p.type == Paramtype.Query) {
-                params.push(this.buildParam(p, "query", aMeta));
+                m = this.buildParam(p, "query", aMeta, requestBody);
             } else if (p.type == Paramtype.Header) {
-                params.push(this.buildParam(p, "header", aMeta));
+                m = this.buildParam(p, "header", aMeta, requestBody);
             } else if (p.type == Paramtype.Cookie) {
-                params.push(this.buildParam(p, "cookie", aMeta));
+                m = this.buildParam(p, "cookie", aMeta, requestBody);
+            } else if (p.type == Paramtype.Body) {
+                m = this.buildParam(p, "body", aMeta, requestBody);
+            }
+
+            if (m) {
+                params.push(m);
             }
         });
         aMeta.actionArguments.map(arg => {
+            let m: any;
             if (arg.type == Paramtype.Path) {
-                params.push(this.buildParam(arg, "path", aMeta));
+                m = this.buildParam(arg, "path", aMeta, requestBody);
             } else if (arg.type == Paramtype.Query) {
-                params.push(this.buildParam(arg, "query", aMeta));
+                m = this.buildParam(arg, "query", aMeta, requestBody);
             } else if (arg.type == Paramtype.Header) {
-                params.push(this.buildParam(arg, "header", aMeta));
+                m = this.buildParam(arg, "header", aMeta, requestBody);
             } else if (arg.type == Paramtype.Cookie) {
-                params.push(this.buildParam(arg, "cookie", aMeta));
+                m = this.buildParam(arg, "cookie", aMeta, requestBody);
+            } else if (arg.type == Paramtype.Body) {
+                m = this.buildParam(arg, "body", aMeta, requestBody);
+            }
+            if (m) {
+                params.push(m);
             }
         });
 
 
+        let resMeta: IApiDocResponse[] = Reflect.getMetadata("api:doc:response", aMeta.actionClass.prototype, "action") || [];
 
-        aMeta.paths.map(p => {
-            this.addPath(`${basePath}${p}`, this.parseMethod(aMeta.method), {
+        let resp = this.buildResponse(resMeta);
+
+        aMeta.paths.map(actionPath => {
+            let pOptions: any = {
                 summary: "my summary",
                 description: "my desc",
                 parameters: params,
                 tags: [controller],
-                responses: {
-                    "200": {
-                        description: "pet response",
-                        content: {
-                            "application/json": {
-                                "schema": {
-                                    $ref: '#/components/schemas/Pet'
-                                }
-                            }
-                        }
-                    },
-                    "default": {
-                        "description": "Unexpected error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Error"
-                                }
-                            }
-                        }
-                    }
-                }
-            });
+
+                responses: resp
+            };
+
+            if (requestBody && requestBody.content) {
+                pOptions.requestBody = requestBody;
+            }
+
+
+            this.addPath(`${basePath}${actionPath}`, this.parseMethod(aMeta.method), pOptions);
         });
 
 
@@ -168,109 +298,7 @@ export class ApiDocSwagger {
 
 
 
-    swaggerJson = {
-        openapi: "3.0.0",
-        "info": {
-            "version": "1.0.1",
-            "title": "Sample Pet Store App",
-            "description": "This is a sample server for a pet store.",
-            "termsOfService": "http://example.com/terms/",
-            "contact": {
-                "name": "API Support",
-                "url": "http://www.example.com/support",
-                "email": "support@example.com"
-            },
-            "license": {
-                "name": "Apache 2.0",
-                "url": "https://www.apache.org/licenses/LICENSE-2.0.html"
-            }
-        },
-        "servers": [
-            {
-                "url": "https://development.gigantic-server.com/v1",
-                "description": "Development server"
-            },
-            {
-                "url": "https://staging.gigantic-server.com/v1",
-                "description": "Staging server"
-            },
-            {
-                "url": "https://api.gigantic-server.com/v1",
-                "description": "Production server"
-            }
-        ],
-        // "host": "petstore.swagger.io",
-        // "basePath": "/api",
-        // "schemes": [
-        //     "http"
-        // ],
-        // "consumes": [
-        //     "application/json"
-        // ],
-        // "produces": [
-        //     "application/json"
-        // ],
-        paths: {
 
-        },
-        components: {
-            schemas: {
-                Pet: {
-                    "type": "object",
-                    "required": [
-                        "id",
-                        "name"
-                    ],
-                    "properties": {
-                        "id": {
-                            "type": "integer"
-                        },
-                        "name": {
-                            "type": "string"
-                        },
-                        "tag": {
-                            "type": "string"
-                        }
-                    }
-                },
-                Error: {
-                    "type": "object",
-                    "required": [
-                        "code",
-                        "message"
-                    ],
-                    "properties": {
-                        "code": {
-                            "type": "integer"
-                        },
-                        "message": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        // "definitions": {
-        //     "Pet": {
-        //         "type": "object",
-        //         "required": [
-        //             "id",
-        //             "name"
-        //         ],
-        //         "properties": {
-        //             "id": {
-        //                 "type": "integer"
-        //             },
-        //             "name": {
-        //                 "type": "string"
-        //             },
-        //             "tag": {
-        //                 "type": "string"
-        //             }
-        //         }
-        //     }
-        // }
-    }
 
     action() {
         return (req: any, res: any) => res.json(this.swaggerJson);

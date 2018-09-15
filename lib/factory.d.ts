@@ -1,4 +1,3 @@
-/// <reference types="express" />
 import "reflect-metadata";
 import { IControllerType } from "./controller/interface";
 import { IActionType } from "./action/interface";

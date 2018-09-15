@@ -7,12 +7,12 @@
     "scripts": {
         "test1": "tsc && node dist/test/serve.js",
         "test": "tsc && mocha --reporter spec --require ts-node/register  **/*.test.ts",
-        "tsc": "tsc -p tsconfig-prod.json"
+        "build": "tsc -p tsconfig-prod.json"
     },
-    "author": "",
+    "author": "farcek@gmail.com",
     "license": "ISC",
     "dependencies": {
-        "@napp/common": "^1.1.0",
+        "@napp/common": "^1.1.3",
         "express": "^4.16.2",
         "reflect-metadata": "^0.1.12",
         "swagger-ui-express": "^4.0.1",

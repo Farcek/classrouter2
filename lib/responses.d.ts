@@ -10,4 +10,4 @@ export declare const exceptionFilter: ExceptionResponseFilter;
 /**
  * viewFilter, redirectFilter, exceptionFilter
  */
-export declare const defaultFilters: ViewResponseFilter[];
+export declare const defaultFilters: (ViewResponseFilter | RedirectResponseFilter | ExceptionResponseFilter)[];

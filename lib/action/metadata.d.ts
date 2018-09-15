@@ -1,8 +1,10 @@
 import { HttpMethod } from '../common/http-method.enum';
 import { ParamMetadata, ArgumentMetadata } from '../param/metadata';
 import { IMiddlewareFactory } from '../middleware/interface';
+import { ClassType } from '@napp/common';
 export declare class ActionMetadata {
-    constructor();
+    actionClass: ClassType;
+    constructor(actionClass: ClassType);
     method: HttpMethod;
     paths: string[];
     properties: ParamMetadata[];
@@ -10,6 +12,5 @@ export declare class ActionMetadata {
     errorArguments: ArgumentMetadata[];
     beforeMiddlewares: IMiddlewareFactory[];
 }
-export declare function createActionMetadata(target: object): ActionMetadata;
 export declare function getActionMetadata(target: object): ActionMetadata;
-export declare function getOrCreateActionMetadata(target: object): ActionMetadata;
+export declare function getOrCreateActionMetadata(target: ClassType): ActionMetadata;

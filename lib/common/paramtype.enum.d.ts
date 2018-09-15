@@ -5,5 +5,5 @@ export declare enum Paramtype {
     Header = 4,
     Cookie = 5,
     Request = 6,
-    Custom = 7,
+    Custom = 7
 }

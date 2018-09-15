@@ -2,6 +2,7 @@ import { IActionType } from '../action/interface';
 import { IControllerType } from './interface';
 import { IMiddlewareFactory } from '../middleware/interface';
 export interface IControllerOption {
+    name?: string;
     path?: string;
     actions?: IActionType[];
     controllers?: IControllerType[];
