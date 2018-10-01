@@ -46,7 +46,8 @@ export class ChangepassAction implements IAction {
 
     @PathParam("userid212121212", new UserPipe()) userid: UserDto
 
-    @apiResponse(UserDto, { isArray: true })
+    @apiResponse(UserDto, { isArray: true, status : 203 })
+    @apiResponse(Object, { isArray: true })
     @apiResponse(UserTodoDto, { status: 205 })
     async action(): Promise<UserDto> {
 

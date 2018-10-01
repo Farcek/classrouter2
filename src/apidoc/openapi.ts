@@ -39,14 +39,15 @@ export function schemaFactory(refType: ClassType, isArray: boolean, schemas: { [
         }
     }
 
+    
     let refMeta = ReflectVariable.factoryVariableMeta(refType);
-
+   
     if (refMeta.IsPrimary) {
         return typeMap(refMeta.Type);
     }
 
     let nMeta = ReflectName.getNameMeta(refType) as NameMeta;
-
+    console.log(22, refType,nMeta )
     if (!(nMeta.Name in schemas)) {
         let schema = schemas[nMeta.Name] = {
             "type": "object",
@@ -57,7 +58,6 @@ export function schemaFactory(refType: ClassType, isArray: boolean, schemas: { [
         let pMeta = ReflectProperty.GetProperiesMeta(refType);
         pMeta.map((p) => {
             let vMeta = ReflectVariable.getVariableMeta(refType, p);
-            console.log("vMeta", p, vMeta);
             if (vMeta) {
                 schema.properties[p] = schemaFactoryForMeta(vMeta, schemas);
             }

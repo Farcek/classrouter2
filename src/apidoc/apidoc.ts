@@ -47,6 +47,10 @@ export interface IApiDocResponse {
 
 export class ApiDocSwagger {
 
+    static mainControllerClass: ClassType;
+
+    public mainController: ClassType;
+
     swaggerJson = {
         openapi: "3.0.0",
         info: {
@@ -90,8 +94,12 @@ export class ApiDocSwagger {
 
     }
 
-    constructor(public mainController: ClassType) {
+    constructor(startController?: ClassType) {
 
+        let mainController = this.mainController = startController || ApiDocSwagger.mainControllerClass;
+        if (!mainController {
+            throw new TypeError("not registered mainController");
+        });
 
         let info: IApiDocInfo = Reflect.getMetadata("api:doc:info", mainController)
 
@@ -122,7 +130,7 @@ export class ApiDocSwagger {
 
                 let dMeta = ReflectDescription.getMeta(aMeta.actionClass, p.propery);
 
-                console.log("aaaaaaaaaaaaaaaaaaaaaaaaaaa", p.propery, variableMeta, )
+
 
                 return {
                     name: p.fieldname.join(" | ") || "*",
@@ -164,6 +172,7 @@ export class ApiDocSwagger {
     }
 
     buildResponse(responseMetas: IApiDocResponse[]) {
+
         if (responseMetas.length == 0) {
             return {
                 "default": {
@@ -178,6 +187,7 @@ export class ApiDocSwagger {
             let status = "" + (it.status || 200);
 
             let dMeta = ReflectDescription.getMeta(it.type);
+
 
 
             let description = it.description || (dMeta && dMeta.Description) || "";
