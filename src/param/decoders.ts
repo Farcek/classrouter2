@@ -31,7 +31,7 @@ function createParamDecoder(type: Paramtype) {
             
             var refType = Reflect.getMetadata("design:type", target, property);
 
-            console.log(refType);
+            
 
             let actionMeta = getOrCreateActionMetadata(target.constructor as ClassType);
             if (typeof parameterIndex === 'number') {

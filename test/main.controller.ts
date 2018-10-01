@@ -2,7 +2,7 @@ import { Controller } from '../src/controllers';
 import { UserController } from './user/user.controller';
 import { LoginController } from './login/login.controller';
 import { ApiController } from './api/api.controller';
-import { apiInfo, apiServers } from '../src';
+import { apiInfo, apiServers, ApiMainController } from '../src';
 
 
 @Controller({
@@ -21,6 +21,7 @@ import { apiInfo, apiServers } from '../src';
     url: "http://local",
     description: "prod"
 }])
+@ApiMainController()
 export class MainController {
 
 }

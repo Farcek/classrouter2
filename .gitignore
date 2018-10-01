@@ -35,3 +35,4 @@ packages/
 /.vscode/
 /dist/*
 /package-lock.json
+/apidoc-root/*

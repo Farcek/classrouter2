@@ -100,9 +100,9 @@ export class ApiDocSwagger {
     constructor(startController?: ClassType) {
 
         let mainController = this.mainController = startController || ApiDocSwagger.mainControllerClass;
-        if (!mainController {
-            throw new TypeError("not registered mainController");
-        });
+        if (!mainController) {
+            throw new TypeError("not registered api main controller");
+        };
 
         let info: IApiDocInfo = Reflect.getMetadata("api:doc:info", mainController)
 

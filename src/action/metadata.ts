@@ -11,7 +11,7 @@ const $ = {
 
 export class ActionMetadata {
     constructor(public actionClass: ClassType) {
-        console.log('action meta' + $.i++)
+        
     }
     method: HttpMethod = HttpMethod.Get
     paths: string[] = ['/']

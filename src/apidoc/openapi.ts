@@ -1,10 +1,5 @@
 import { ClassType, ReflectProperty, ReflectVariable, VariablePrimitiveType, ReflectName, NameMeta, VariableMeta } from "@napp/common";
 
-
-
-
-
-
 function typeMap(vt: VariablePrimitiveType) {
     if (vt === VariablePrimitiveType.Boolean) return { type: "boolean" };
     if (vt === VariablePrimitiveType.Date) return { type: "string", format: "date" };
@@ -47,7 +42,7 @@ export function schemaFactory(refType: ClassType, isArray: boolean, schemas: { [
     }
 
     let nMeta = ReflectName.getNameMeta(refType) as NameMeta;
-    console.log(22, refType,nMeta )
+    
     if (!(nMeta.Name in schemas)) {
         let schema = schemas[nMeta.Name] = {
             "type": "object",
