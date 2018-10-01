@@ -35,6 +35,7 @@ export interface IApiDocResponse {
     status?: number;
 }
 export declare class ApiDocSwagger {
+    static mainControllerClass: ClassType;
     mainController: ClassType;
     swaggerJson: {
         openapi: string;
@@ -48,7 +49,7 @@ export declare class ApiDocSwagger {
             schemas: {};
         };
     };
-    constructor(mainController: ClassType);
+    constructor(startController?: ClassType);
     buildParam(p: ParamMetadata | ArgumentMetadata, paramType: string, aMeta: ActionMetadata, requestBody: any): false | {
         name: string;
         summary: string;
