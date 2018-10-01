@@ -1,28 +1,6 @@
 import { IApiDocInfo, IApiDocServers, IApiDocResponse, ApiDocSwagger } from "./apidoc";
 import { ClassType, ReflectDecoratorFactory } from "@napp/common";
 
-
-// export interface IApiModel {
-//     name: string
-//     description: string
-// }
-// export function ApiModel(opt: IApiModel) {
-//     return (target: object) => {
-
-//     }
-// }
-
-// export interface IApiModelPropery {
-
-// }
-
-// export function ApiModelPropery(opt: IApiModelPropery) {
-//     return (target: object, property: string) => {
-
-//     }
-// }
-
-
 export function apiInfo(info: IApiDocInfo) {
     return Reflect.metadata("api:doc:info", info);
 }
@@ -41,6 +19,7 @@ export interface IOptionApiResponse {
     isArray?: boolean;
 
 }
+
 export function apiResponse(type: ClassType, option?: IOptionApiResponse) {
 
     return (target: object, property: string) => {
@@ -66,7 +45,7 @@ export function apiResponse(type: ClassType, option?: IOptionApiResponse) {
     };
 }
 
-export function ApiMainController() {
+export function apiMainController() {
     return ReflectDecoratorFactory.ClassDecorator((target) => {
         ApiDocSwagger.mainControllerClass = target;
     });
