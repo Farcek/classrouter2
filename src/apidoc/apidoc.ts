@@ -4,6 +4,9 @@ import { Paramtype } from "../common/paramtype.enum";
 import { HttpMethod } from "../common/http-method.enum";
 import { ParamMetadata, ArgumentMetadata } from "../param/metadata";
 import { ReflectVariable, ReflectDescription, ClassType, ReflectMeta } from "@napp/common";
+import { parse as UriTokenParser } from "path-to-regexp";
+
+
 
 import { schemaFactoryForMeta, schemaFactory } from "./openapi";
 
@@ -130,11 +133,9 @@ export class ApiDocSwagger {
 
                 let dMeta = ReflectDescription.getMeta(aMeta.actionClass, p.propery);
 
-
-
                 return {
                     name: p.fieldname.join(" | ") || "*",
-                    summary: `${p.fieldname} - su`,
+                    summary: `${p.fieldname} - summary`,
                     description: dMeta && dMeta.Description || "",
                     in: paramType,
                     schema: schemaFactoryForMeta(variableMeta, this.swaggerJson.components.schemas)
@@ -184,7 +185,7 @@ export class ApiDocSwagger {
         let rest: any = {};
 
         responseMetas.map((it) => {
-            let status = "" + (it.status || 200);
+            let status = "" + (it.status || 'default');
 
             let dMeta = ReflectDescription.getMeta(it.type);
 
@@ -249,10 +250,13 @@ export class ApiDocSwagger {
 
         let resp = this.buildResponse(resMeta);
 
+        let descClassMeta = ReflectDescription.getMeta(aMeta.actionClass);
+        let descActionMeta = ReflectDescription.getMeta(aMeta.actionClass, "action");
+
         aMeta.paths.map(actionPath => {
             let pOptions: any = {
-                summary: "my summary",
-                description: "my desc",
+                summary: descClassMeta && descClassMeta.Description || "",
+                description: descActionMeta && descActionMeta.Description || "",
                 parameters: params,
                 tags: [controller],
 
@@ -290,10 +294,20 @@ export class ApiDocSwagger {
     addPath(path: string, method: string, dda: any) {
         var paths: any = this.swaggerJson.paths;
 
-        var pp = paths[path] || (paths[path] = {});
+        let tokens = UriTokenParser(path);
+        let newPath = tokens.map((r: any) => {
+            if (r.name) {
+                return `${r.prefix}{${r.name}}`
+            }
+            return r.toString();
+        }).join('');
+
+
+        var pp = paths[newPath] || (paths[newPath] = {});
         pp[method] = dda;
     }
     controllerMap(cMeta: ControllerMetadata, basePath: string, controller: string) {
+
         let controllerName = controller && cMeta.name ? `${controller}.${cMeta.name}` : cMeta.name;
         cMeta.actions.map((aClass) => {
             let aMeta = getActionMetadata(aClass);

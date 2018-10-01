@@ -1,13 +1,15 @@
 {
     "name": "classrouter",
-    "version": "3.0.1",
+    "version": "3.0.4",
     "description": "typescript expressjs class router",
     "main": "./lib/index.js",
     "types": "./lib/index.d.ts",
     "scripts": {
         "test1": "tsc && node dist/test/serve.js",
         "test": "tsc && mocha --reporter spec --require ts-node/register  **/*.test.ts",
-        "build": "tsc -p tsconfig-prod.json"
+        "build": "tsc -p tsconfig-prod.json",
+        "prenpm2push": "npm run build",
+        "npm2push": "npm publish"
     },
     "author": "farcek@gmail.com",
     "bin": "./lib/cli.js",
@@ -17,6 +19,7 @@
         "commander": "^2.18.0",
         "express": "^4.16.2",
         "rc": "^1.2.8",
+        "path-to-regexp": "^2.4.0",
         "reflect-metadata": "^0.1.12",
         "swagger-ui-express": "^4.0.1",
         "uuid": "^3.3.2"
