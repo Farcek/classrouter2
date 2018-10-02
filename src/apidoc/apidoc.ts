@@ -308,7 +308,10 @@ export class ApiDocSwagger {
     }
     controllerMap(cMeta: ControllerMetadata, basePath: string, controller: string) {
 
+        
         let controllerName = controller && cMeta.name ? `${controller}.${cMeta.name}` : cMeta.name;
+
+        
         cMeta.actions.map((aClass) => {
             let aMeta = getActionMetadata(aClass);
             this.actionMap(aMeta, `${basePath}${cMeta.path}`, controllerName);

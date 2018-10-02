@@ -15,4 +15,4 @@ export interface IOptionApiResponse {
     isArray?: boolean;
 }
 export declare function apiResponse(type: ClassType, option?: IOptionApiResponse): (target: object, property: string) => void;
-export declare function ApiMainController(): ClassDecorator;
+export declare function apiMainController(): ClassDecorator;
