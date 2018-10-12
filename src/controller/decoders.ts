@@ -19,6 +19,8 @@ export function Controller(option: IControllerOption): ClassDecorator {
     return (target: object) => {
         let meta = createControllerMetadata(target);
 
+        meta.ref = target as ClassType;
+
         if (option.name) {
             meta.name = option.name;
         } else {
