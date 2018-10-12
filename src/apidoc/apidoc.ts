@@ -9,6 +9,7 @@ import { parse as UriTokenParser } from "path-to-regexp";
 
 
 import { schemaFactoryForMeta, schemaFactory } from "./openapi";
+import { APIDOCKEY_securitySchema, ApiSecuritySchemas, APIDOCKEY_securityUse, ApiSecurityUse } from "./common";
 
 export interface IApiDocInfo {
     title: string;
@@ -90,9 +91,15 @@ export class ApiDocSwagger {
 
         },
         components: {
+            securitySchemes: {
+
+            },
             schemas: {
 
             }
+        },
+        security: {
+
         }
 
     }
@@ -118,9 +125,26 @@ export class ApiDocSwagger {
             this.swaggerJson.servers = servers;
         }
 
+        this.buildSecurity(mainController);
 
         let cMeta = getControllerMetadata(mainController);
-        this.controllerMap(cMeta, '', '');
+        this.controllerMap(cMeta, '', '', '');
+    }
+
+    buildSecurity(mainController: ClassType) {
+        let meta = ReflectMeta.GetMeta<ApiSecuritySchemas>(APIDOCKEY_securitySchema, mainController)
+        if (meta) {
+            let securitySchemes: { [k: string]: any } = this.swaggerJson.components.securitySchemes;
+            let security: { [k: string]: any[] } = this.swaggerJson.security;
+            for (let it of meta.schemas) {
+                if (it.type === "basic") {
+                    securitySchemes[it.authName] = { type: "http", scheme: "basic" };
+                } else if (it.type === "bearer") {
+                    securitySchemes[it.authName] = { type: "http", scheme: "bearer" };
+                }
+                security[it.authName] = [];
+            }
+        }
     }
 
     buildParam(p: ParamMetadata | ArgumentMetadata, paramType: string, aMeta: ActionMetadata, requestBody: any) {
@@ -206,7 +230,7 @@ export class ApiDocSwagger {
 
         return rest;
     }
-    actionMap(aMeta: ActionMetadata, basePath: string, controller: string) {
+    actionMap(aMeta: ActionMetadata, basePath: string, controller: string, securityName: string) {
         let params: any[] = [];
         let requestBody: any = {};
         aMeta.properties.map(p => {
@@ -253,10 +277,29 @@ export class ApiDocSwagger {
         let descClassMeta = ReflectDescription.getMeta(aMeta.actionClass);
         let descActionMeta = ReflectDescription.getMeta(aMeta.actionClass, "action");
 
+
+        /**
+         * security build
+         */
+        let meta__securityUse = ReflectMeta.GetMeta<ApiSecurityUse>(APIDOCKEY_securityUse, aMeta.actionClass);
+        if (meta__securityUse) {            
+            securityName = meta__securityUse.name;
+        }
+        let securitySchema: any = [];
+
+        if (securityName) {
+            securitySchema = [{
+                [securityName]: []
+            }];
+        }
+
+
+
         aMeta.paths.map(actionPath => {
             let pOptions: any = {
                 summary: descClassMeta && descClassMeta.Description || "",
                 description: descActionMeta && descActionMeta.Description || "",
+                security: securitySchema,
                 parameters: params,
                 tags: [controller],
 
@@ -306,20 +349,25 @@ export class ApiDocSwagger {
         var pp = paths[newPath] || (paths[newPath] = {});
         pp[method] = dda;
     }
-    controllerMap(cMeta: ControllerMetadata, basePath: string, controller: string) {
+    controllerMap(cMeta: ControllerMetadata, basePath: string, controller: string, securityName: string) {
 
-        
+        let _securityName = securityName;
+        let meta__securityUse = ReflectMeta.GetMeta<ApiSecurityUse>(APIDOCKEY_securityUse, cMeta.ref);
+        if (meta__securityUse) {
+            _securityName = meta__securityUse.name;
+        }
+
         let controllerName = controller && cMeta.name ? `${controller}.${cMeta.name}` : cMeta.name;
 
-        
+
         cMeta.actions.map((aClass) => {
             let aMeta = getActionMetadata(aClass);
-            this.actionMap(aMeta, `${basePath}${cMeta.path}`, controllerName);
+            this.actionMap(aMeta, `${basePath}${cMeta.path}`, controllerName, _securityName);
         });
 
         cMeta.childControllers.map((ctrlType) => {
             let chMeta = getControllerMetadata(ctrlType);
-            this.controllerMap(chMeta, `${basePath}${cMeta.path}`, controllerName);
+            this.controllerMap(chMeta, `${basePath}${cMeta.path}`, controllerName, _securityName);
         });
     }
 
