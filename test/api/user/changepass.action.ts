@@ -3,7 +3,7 @@ import { BodyParam, QueryParam, Post, IAction, PathParam } from '../../../src/ac
 import { UserPipe, UserValidationPipe, IUser } from '../../common/pipes';
 
 import { Description, Property, Type } from "@napp/common"
-import { apiResponse } from '../../../src';
+import { apiResponse, apiSecurityUse } from '../../../src';
 
 
 
@@ -32,6 +32,8 @@ export class UserTodoDto implements IUser {
 @Post({
     path: '/changepass'
 })
+
+@apiSecurityUse("auth1")
 export class ChangepassAction implements IAction {
 
 

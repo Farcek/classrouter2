@@ -1,9 +1,10 @@
-import { PathParam, Get, IAction, ViewResponse } from '../../../src/actions';
+import { PathParam, Get, IAction,  apiSecurityUse } from '../../../src';
 
-import { IntPipe, UserPipe, UserValidationPipe, IUser } from '../../common/pipes';
+import { IntPipe, UserPipe,  IUser } from '../../common/pipes';
 
 
-@Get()
+
+@Get() @apiSecurityUse("auth2")
 export class ShowAction implements IAction {
 
     async action( @PathParam('userid', new IntPipe(), new UserPipe()) user: IUser) {

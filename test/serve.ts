@@ -25,11 +25,11 @@ async function boostrap() {
 
     app.get("/api.json", new ApiDocSwagger(MainController).action());
 
-    // app.use('/docs', swaggerUi.serve, swaggerUi.setup(null, options));
+    app.use('/docs', swaggerUi.serve, swaggerUi.setup(null, options));
 
-    // app.listen(3000, () => {
-    //     console.log('app started')
-    // });
+    app.listen(3000, () => {
+        console.log('app started')
+    });
 }
 
 boostrap();
