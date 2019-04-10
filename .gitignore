@@ -36,3 +36,4 @@ packages/
 /dist/*
 /package-lock.json
 /apidoc-root/*
+/lib

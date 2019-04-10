@@ -43,7 +43,7 @@ export function schemaFactory(refType: ClassType, isArray: boolean, schemas: { [
 
     let nMeta = ReflectName.getNameMeta(refType) as NameMeta;
     
-    if (!(nMeta.Name in schemas)) {
+    if (nMeta && !(nMeta.Name in schemas)) {
         let schema = schemas[nMeta.Name] = {
             "type": "object",
             "required": [],
@@ -61,5 +61,5 @@ export function schemaFactory(refType: ClassType, isArray: boolean, schemas: { [
 
 
 
-    return { $ref: `#/components/schemas/${nMeta.Name}` };
+    return { $ref: `#/components/schemas/${nMeta ? nMeta.Name : 'Object'}` };
 }
