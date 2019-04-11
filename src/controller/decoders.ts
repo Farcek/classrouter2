@@ -3,6 +3,7 @@ import { IActionType } from '../action/interface';
 import { IControllerType } from './interface';
 import { ControllerMetadata, createControllerMetadata } from './metadata';
 import { IMiddlewareFactory } from '../middleware/interface';
+import { ReflectName, ClassType } from '@napp/common';
 
 
 export interface IControllerOption {
@@ -17,7 +18,19 @@ export interface IControllerOption {
 export function Controller(option: IControllerOption): ClassDecorator {
     return (target: object) => {
         let meta = createControllerMetadata(target);
-        if (option.name) meta.name = option.name;
+
+        meta.ref = target as ClassType;
+
+        if (option.name) {
+            meta.name = option.name;
+        } else {
+            let nMeta = ReflectName.getNameMeta(target as ClassType);
+            if (nMeta) {
+                meta.name = nMeta.Name;
+            }
+        }
+
+
         if (option.path) meta.path = option.path;
 
         if (Array.isArray(option.actions)) meta.actions = option.actions

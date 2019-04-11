@@ -4,12 +4,15 @@ import { Metaname } from '../common/metaname';
 import { IControllerType } from './interface';
 import { IActionType } from '../action/interface';
 import { IMiddlewareFactory } from '../middleware/interface';
+import { ClassType } from '@napp/common';
 
 
 
 
 export class ControllerMetadata {
-    name =""
+    name = "";
+
+    ref: ClassType;
     path: string = '/'
     actions: IActionType[] = []
     childControllers: IControllerType[] = []

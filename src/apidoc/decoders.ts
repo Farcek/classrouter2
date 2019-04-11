@@ -1,5 +1,7 @@
 import { IApiDocInfo, IApiDocServers, IApiDocResponse, ApiDocSwagger } from "./apidoc";
-import { ClassType, ReflectDecoratorFactory } from "@napp/common";
+import { ClassType, ReflectDecoratorFactory, ReflectMeta, BaseMeta } from "@napp/common";
+import { type } from "os";
+import { ApiSecuritySchemas, ApiSecurityUse, APIDOCKEY_securitySchema, APIDOCKEY_securityUse } from "./common";
 
 export function apiInfo(info: IApiDocInfo) {
     return Reflect.metadata("api:doc:info", info);
@@ -48,5 +50,28 @@ export function apiResponse(type: ClassType, option?: IOptionApiResponse) {
 export function apiMainController() {
     return ReflectDecoratorFactory.ClassDecorator((target) => {
         ApiDocSwagger.mainControllerClass = target;
+    });
+}
+
+
+
+export function apiSecurityDefine(authName: string, type: 'bearer' | 'basic') {
+    return ReflectDecoratorFactory.ClassDecorator((target) => {
+        let meta = ReflectMeta.GetMeta<ApiSecuritySchemas>(APIDOCKEY_securitySchema, target);
+        if (meta) {
+            meta.schemas.push({ authName, type });
+        } else {
+            meta = new ApiSecuritySchemas();
+            meta.schemas.push({ authName, type });
+            ReflectMeta.SetMeta(APIDOCKEY_securitySchema, meta, target);
+        }
+    });
+}
+
+export function apiSecurityUse(authName: string) {
+    return ReflectDecoratorFactory.ClassDecorator((target) => {
+        let meta = new ApiSecurityUse();
+        meta.name = authName;
+        ReflectMeta.SetMeta(APIDOCKEY_securityUse, meta, target);
     });
 }
