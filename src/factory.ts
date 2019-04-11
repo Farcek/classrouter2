@@ -65,14 +65,12 @@ export class ClassrouterFactory {
             let befores = cMeta.beforeMiddlewares.map(f => f());
             if (befores.length > 0) router.use(befores);
 
-            await Promise.all(cMeta.actions.map(async (actionType) => {
+            for(let actionType of cMeta.actions){
                 await this.setupAction(actionType, router, `${basePath}${cMeta.path}`);
-            }));
-
-            await Promise.all(cMeta.childControllers.map(async (cType) => {
+            }
+            for(let cType of cMeta.childControllers){
                 await this.setupController(cType, router, `${basePath}${cMeta.path}`);
-            }));
-
+            }
             parent.use(cMeta.path, router);
         } else {
             throw new Error(`not found controller meta ${ctrlType}`);
@@ -160,28 +158,26 @@ export class ClassrouterFactory {
 
     async  actinHandle(actionType: IActionType, aMeta: ActionMetadata) {
 
-
-
         const action = async (req: express.Request, res: express.Response) => {
 
             try {
                 let actionInstance = new actionType();
                 try {
                     // bind properies
-                    await Promise.all(aMeta.properties.map(async (prop) => {
+                    for(let prop of aMeta.properties){
                         let defaultvalue = this.defaultValue(actionInstance, prop.propery);
                         let initVal = await this.resolveValue(prop.type, prop.fieldname, req, defaultvalue);
                         let value = await this.transformValue(initVal, prop.pipes);
                         (<any>actionInstance)[prop.propery] = value;
-                    }));
-
+                    }
+                    
                     // bind arguments
-                    let actionArgs = await Promise.all(aMeta.actionArguments.map(async (prop) => {
+                    let actionArgs:any[] =[];
+                    for(let prop of aMeta.actionArguments){
                         let initVal = await this.resolveValue(prop.type, prop.fieldname, req, undefined);
                         let value = await this.transformValue(initVal, prop.pipes);
-                        return value;
-                    }));
-
+                        actionArgs.push(value);
+                    }
 
                     let result = await Promise.resolve(actionInstance.action(...actionArgs));
 
