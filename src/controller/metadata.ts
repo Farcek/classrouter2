@@ -13,7 +13,7 @@ export class ControllerMetadata {
     name = "";
 
     ref: ClassType;
-    path: string = '/'
+    path: string | null
     actions: IActionType[] = []
     childControllers: IControllerType[] = []
     //parentController: IControllerType | null

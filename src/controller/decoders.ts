@@ -7,7 +7,7 @@ import { ReflectName, ClassType } from '@napp/common';
 
 
 export interface IControllerOption {
-    name?: string
+    name: string
     path?: string
     actions?: IActionType[]
     controllers?: IControllerType[]
@@ -20,17 +20,7 @@ export function Controller(option: IControllerOption): ClassDecorator {
         let meta = createControllerMetadata(target);
 
         meta.ref = target as ClassType;
-
-        if (option.name) {
-            meta.name = option.name;
-        } else {
-            let nMeta = ReflectName.getNameMeta(target as ClassType);
-            if (nMeta) {
-                meta.name = nMeta.Name;
-            }
-        }
-
-
+        meta.name = option.name;
         if (option.path) meta.path = option.path;
 
         if (Array.isArray(option.actions)) meta.actions = option.actions

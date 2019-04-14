@@ -60,18 +60,23 @@ export class ClassrouterFactory {
     async setupController(ctrlType: IControllerType, parent: express.Router, basePath: string) {
         let cMeta = getControllerMetadata(ctrlType);
         if (cMeta) {
-            const router = express.Router();
+            let router = express.Router();
 
             let befores = cMeta.beforeMiddlewares.map(f => f());
             if (befores.length > 0) router.use(befores);
 
-            for(let actionType of cMeta.actions){
+            for (let actionType of cMeta.actions) {
                 await this.setupAction(actionType, router, `${basePath}${cMeta.path}`);
             }
-            for(let cType of cMeta.childControllers){
+            for (let cType of cMeta.childControllers) {
                 await this.setupController(cType, router, `${basePath}${cMeta.path}`);
             }
-            parent.use(cMeta.path, router);
+            if (cMeta.path) {
+                parent.use(cMeta.path, router);
+            } else {
+                parent.use(router);
+            }
+
         } else {
             throw new Error(`not found controller meta ${ctrlType}`);
         }
@@ -164,16 +169,16 @@ export class ClassrouterFactory {
                 let actionInstance = new actionType();
                 try {
                     // bind properies
-                    for(let prop of aMeta.properties){
+                    for (let prop of aMeta.properties) {
                         let defaultvalue = this.defaultValue(actionInstance, prop.propery);
                         let initVal = await this.resolveValue(prop.type, prop.fieldname, req, defaultvalue);
                         let value = await this.transformValue(initVal, prop.pipes);
                         (<any>actionInstance)[prop.propery] = value;
                     }
-                    
+
                     // bind arguments
-                    let actionArgs:any[] =[];
-                    for(let prop of aMeta.actionArguments){
+                    let actionArgs: any[] = [];
+                    for (let prop of aMeta.actionArguments) {
                         let initVal = await this.resolveValue(prop.type, prop.fieldname, req, undefined);
                         let value = await this.transformValue(initVal, prop.pipes);
                         actionArgs.push(value);
@@ -187,15 +192,19 @@ export class ClassrouterFactory {
                     //let _err = this.errorParse(error);
 
                     if (actionInstance.onError && typeof actionInstance.onError === 'function') {
-                        let errorArgs = await Promise.all(aMeta.errorArguments.map(async (prop) => {
+
+                        let errorArgs: any[] = [];
+                        for (let prop of aMeta.errorArguments) {
                             let initVal = await this.resolveValue(prop.type, prop.fieldname, req, undefined);
                             let value = await this.transformValue(initVal, prop.pipes);
-                            return value;
-                        }));
+                            errorArgs.push(value);
+                        }
+
                         // remove first arg
                         errorArgs.splice(0, 1);
 
                         let result = await Promise.resolve(actionInstance.onError(error, ...errorArgs));
+
                         await this.result(result, req, res);
                     } else {
                         throw error;
@@ -220,23 +229,22 @@ export class ClassrouterFactory {
         let aMeta = getActionMetadata(actionType);
         let handle = await this.actinHandle(actionType, aMeta);
         let befores = aMeta.beforeMiddlewares.map(f => f());
-        let handlers = [...befores, handle];
 
         aMeta.paths.map(path => {
             if (aMeta.method == HttpMethod.Get) {
-                router.get(path, handlers);
+                router.get(path, befores, handle);
                 this.log(`register action: GET ${basepath}${path}`);
             } else if (aMeta.method == HttpMethod.Post) {
-                router.post(path, handlers);
+                router.post(path, befores, handle);
                 this.log(`register action: POST ${basepath}${path}`);
             } else if (aMeta.method == HttpMethod.Put) {
-                router.put(path, handlers);
+                router.put(path, befores, handle);
                 this.log(`register action: PUT ${basepath}${path}`);
             } else if (aMeta.method == HttpMethod.Delete) {
-                router.delete(path, handlers);
+                router.delete(path, befores, handle);
                 this.log(`register action: DEL ${basepath}${path}`);
             } else if (aMeta.method == HttpMethod.All) {
-                router.all(path, handlers);
+                router.all(path, befores, handle);
                 this.log(`register action: ALL ${basepath}${path}`);
             } else {
                 throw new Error("not suported method");
@@ -258,9 +266,19 @@ export class ClassrouterFactory {
     }
 
     async initlize() {
-        await Promise.all(this.controllerTypes.map(async (ctrlType) => {
-            await this.setupController(ctrlType, this.app, this.basepath || '');
-        }));
+        let router = express.Router();
+
+        for (let ctrlType of this.controllerTypes) {
+            await this.setupController(ctrlType, router, this.basepath || '');
+        }
+
+
+        if (this.basepath) {
+            this.app.use(this.basepath, router);
+        } else {
+            this.app.use(router);
+        }
+
 
         this.setupErrorhandle();
     }
