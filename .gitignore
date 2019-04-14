@@ -33,7 +33,7 @@ packages/
 
 /node_modules/
 /.vscode/
-/dist/*
+/dist
 /package-lock.json
 /apidoc-root/*
 /lib
