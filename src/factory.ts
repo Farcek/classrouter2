@@ -1,287 +1,59 @@
-import "reflect-metadata";
+import { Classtype, OController, IResponseFilter } from "./interface";
+import { Rootmeta } from "./metadata";
+import express from "express";
+import { Builder } from "./builder";
+import { Lanchar } from "./lanchar";
 
-
-import { IControllerType } from "./controller/interface";
-import { getControllerMetadata } from "./controller/metadata";
-
-import { IActionType } from "./action/interface";
-import { ActionMetadata, getActionMetadata } from "./action/metadata";
-import { IPipeTransform } from "./pipe/interface";
-import { IResponseFilter, IFilterParam } from "./response/interface";
-
-import { ParamMetadata } from "./param/metadata";
-import { Paramtype } from "./common/paramtype.enum";
-
-import { HttpException, ServerException } from "./exceptions";
-import { HttpMethod } from "./common/http-method.enum";
-import * as express from "express";
-
-
-const uuid = require('uuid');
-
-export interface IFactoryOptions {
-    basepath?: string
-    app: express.Application
-    controllerTypes: IControllerType[]
-    responseFilters: IResponseFilter[]
-
-    /**
-     * error action omno. app-routed zalgagdana
-     */
-    notFoundHandler?: (req: any, res: any, next: any) => void
-}
 export class ClassrouterFactory {
 
-    app: express.Application;
-    basepath?: string
 
-    controllerTypes: IControllerType[]
+    private root = new Rootmeta();
+    private lanchar = new Lanchar();
+    constructor() {
 
-    responseFilters: IResponseFilter[]
-    notFoundHandler?: (req: any, res: any, next: any) => void
-
-    constructor(options: IFactoryOptions) {
-        this.basepath = options.basepath;
-        this.app = options.app;
-        this.controllerTypes = options.controllerTypes;
-        this.responseFilters = options.responseFilters;
-        this.notFoundHandler = options.notFoundHandler;
     }
 
-    log(...msg: any[]) {
-        console.log(...msg);
-    }
-    logError(error: HttpException) {
-        console.log(`--------------- ${error.name} -------------------`)
-        console.log(error.message)
-        console.log(error.stack)
+    setupController(...controller: Classtype[]) {
+        for (let c of controller) {
+            this.root.registerController(c, '');
+        }
+        return this;
     }
 
-    async setupController(ctrlType: IControllerType, parent: express.Router, basePath: string) {
-        let cMeta = getControllerMetadata(ctrlType);
-        if (cMeta) {
-            let router = express.Router();
+    setupDefaultResponseFilter(filter: IResponseFilter) {
+        this.lanchar.defaultResponse = filter;
+        return this;
+    }
+    setupResonsefilter(...filter: IResponseFilter[]) {
 
-            let befores = cMeta.beforeMiddlewares.map(f => f());
-            if (befores.length > 0) router.use(befores);
+        for (let f of filter) {
+            this.lanchar.responseFilters.push(f);
+        }
+        return this;
+    }
 
-            for (let actionType of cMeta.actions) {
-                await this.setupAction(actionType, router, `${basePath}${cMeta.path}`);
-            }
-            for (let cType of cMeta.childControllers) {
-                await this.setupController(cType, router, `${basePath}${cMeta.path}`);
-            }
-            if (cMeta.path) {
-                parent.use(cMeta.path, router);
-            } else {
-                parent.use(router);
-            }
 
+
+
+    build(app: express.Application, basepath?: string) {
+        let build = new Builder(this.lanchar);
+
+        if (basepath) {
+            let route = express.Router();
+
+            build.buildRoot(route, this.root, [basepath]);
+            app.use(basepath, route);
         } else {
-            throw new Error(`not found controller meta ${ctrlType}`);
-        }
-    }
-
-
-    defaultValue(ins: any, property: string) {
-        if (ins && property in ins) {
-            return ins[property];
-        }
-        return undefined;
-    }
-
-    async resolveValue(type: Paramtype, fieldnames: string[], req: express.Request, defaultValue: any) {
-
-        let find = (store: any) => {
-            if (fieldnames.length == 0) {
-                return store
-            }
-            for (let f of fieldnames) {
-                if (f in store) {
-                    return store[f];
-                }
-            }
-            return defaultValue;
+            build.buildRoot(app, this.root, []);
         }
 
-        if (type == Paramtype.Body) {
-            return find(req.body);
-        } else if (type == Paramtype.Query) {
-            return find(req.query);
-        } else if (type == Paramtype.Path) {
-            return find(req.params);
-        } else if (type == Paramtype.Cookie) {
-            return find(req.cookies);
-        } else if (type == Paramtype.Header) {
-            return find(req.headers);
-        } else if (type == Paramtype.Request) {
-            return find(req);
-        }
-    }
-
-    transformValue(startValue: any, pipes: IPipeTransform[]) {
-        return pipes.reduce((p, pipe) => p.then(v => pipe.transform(v)), Promise.resolve(startValue))
-    }
-    async result(actionResult: any, req: express.Request, res: express.Response) {
-
-        let param: IFilterParam = {
-            actionResult: actionResult,
-            expressRes: res,
-            expressReq: req,
-            handled: false
-        }
-
-        for (const filter of this.responseFilters) {
-            await filter.filter(param);
-            if (param.handled) {
-                return;
-            }
-        }
-
-        if (actionResult) {
-            res.status(200).json(actionResult);
-        } else {
-            res.end();
-        }
-    }
-
-    errorParse(error: any) {
-        if (error instanceof HttpException) {
-            return error;
-        }
-
-        if (error instanceof Error) {
-            return new ServerException(error.message)
-        }
-
-        if (typeof error === 'string') {
-            return new ServerException(error)
-        }
-
-        return new ServerException(error.message || '' + error)
-    }
-
-    async  actinHandle(actionType: IActionType, aMeta: ActionMetadata) {
-
-        const action = async (req: express.Request, res: express.Response) => {
-
-            try {
-                let actionInstance = new actionType();
-                try {
-                    // bind properies
-                    for (let prop of aMeta.properties) {
-                        let defaultvalue = this.defaultValue(actionInstance, prop.propery);
-                        let initVal = await this.resolveValue(prop.type, prop.fieldname, req, defaultvalue);
-                        let value = await this.transformValue(initVal, prop.pipes);
-                        (<any>actionInstance)[prop.propery] = value;
-                    }
-
-                    // bind arguments
-                    let actionArgs: any[] = [];
-                    for (let prop of aMeta.actionArguments) {
-                        let initVal = await this.resolveValue(prop.type, prop.fieldname, req, undefined);
-                        let value = await this.transformValue(initVal, prop.pipes);
-                        actionArgs.push(value);
-                    }
-
-                    let result = await Promise.resolve(actionInstance.action(...actionArgs));
-
-                    await this.result(result, req, res);
-
-                } catch (error) {
-                    //let _err = this.errorParse(error);
-
-                    if (actionInstance.onError && typeof actionInstance.onError === 'function') {
-
-                        let errorArgs: any[] = [];
-                        for (let prop of aMeta.errorArguments) {
-                            let initVal = await this.resolveValue(prop.type, prop.fieldname, req, undefined);
-                            let value = await this.transformValue(initVal, prop.pipes);
-                            errorArgs.push(value);
-                        }
-
-                        // remove first arg
-                        errorArgs.splice(0, 1);
-
-                        let result = await Promise.resolve(actionInstance.onError(error, ...errorArgs));
-
-                        await this.result(result, req, res);
-                    } else {
-                        throw error;
-                    }
-                }
-            } catch (error) {
-                let _err = this.errorParse(error);
-                this.logError(_err);
-                await this.result(_err, req, res);
-            }
-        }
-
-        return (req: express.Request, res: express.Response) => {
-            const rid = uuid();
-            action(req, res);
-        }
-
-    }
-
-    async setupAction(actionType: IActionType, router: express.Router, basepath: string) {
-
-        let aMeta = getActionMetadata(actionType);
-        let handle = await this.actinHandle(actionType, aMeta);
-        let befores = aMeta.beforeMiddlewares.map(f => f());
-
-        aMeta.paths.map(path => {
-            if (aMeta.method == HttpMethod.Get) {
-                router.get(path, befores, handle);
-                this.log(`register action: GET ${basepath}${path}`);
-            } else if (aMeta.method == HttpMethod.Post) {
-                router.post(path, befores, handle);
-                this.log(`register action: POST ${basepath}${path}`);
-            } else if (aMeta.method == HttpMethod.Put) {
-                router.put(path, befores, handle);
-                this.log(`register action: PUT ${basepath}${path}`);
-            } else if (aMeta.method == HttpMethod.Delete) {
-                router.delete(path, befores, handle);
-                this.log(`register action: DEL ${basepath}${path}`);
-            } else if (aMeta.method == HttpMethod.All) {
-                router.all(path, befores, handle);
-                this.log(`register action: ALL ${basepath}${path}`);
-            } else {
-                throw new Error("not suported method");
-            }
+        app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+            this.lanchar.response(err, req, res, next);
         });
-
     }
 
-    setupErrorhandle() {
-
-        if (this.notFoundHandler) {
-            this.app.use(this.notFoundHandler);
-        }
-
-        this.app.use((err: any, req: any, res: any, next: any) => {
-            let _err = this.errorParse(err);
-            this.result(_err, req, res);
-        })
+    toMetajson() {
+        return this.root.toMetajson();
     }
-
-    async initlize() {
-        let router = express.Router();
-
-        for (let ctrlType of this.controllerTypes) {
-            await this.setupController(ctrlType, router, this.basepath || '');
-        }
-
-
-        if (this.basepath) {
-            this.app.use(this.basepath, router);
-        } else {
-            this.app.use(router);
-        }
-
-
-        this.setupErrorhandle();
-    }
-
 
 }
