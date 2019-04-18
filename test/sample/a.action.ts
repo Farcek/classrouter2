@@ -1,4 +1,4 @@
-import { Get, Action, QueryParam, HeaderParam, CookieParam, ErrorHandle } from "../src";
+import { Get, Action, QueryParam, HeaderParam, CookieParam, ErrorHandle } from "src";
 
 @Get({ path: '/a-action', name: 'a-action', errorHandle: 'OnError' })
 export class aAction {

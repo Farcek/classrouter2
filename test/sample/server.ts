@@ -1,5 +1,5 @@
 import "reflect-metadata";
-import { ClassrouterFactory } from "../src";
+import { ClassrouterFactory, JsonResponseFilter } from "src";
 import { aController } from "./a.controller";
 import  express from 'express'
 
@@ -8,7 +8,7 @@ async function startup(){
     let app =  express();
     new ClassrouterFactory()
         .setupController(aController)
-        .setupResonsefilter()
+        .setupResonsefilter(new JsonResponseFilter())
         .build(app, '/api');
 
     app.listen(3000,()=>{

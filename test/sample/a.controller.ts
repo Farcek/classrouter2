@@ -1,4 +1,4 @@
-import { Controller, Get, Post, BodyParam, QueryParam, ErrorHandle } from "../src";
+import { Controller, Get, Post, BodyParam, QueryParam, ErrorHandle } from "src";
 import { bController } from "./b.controller";
 import { aAction } from "./a.action";
 
@@ -16,7 +16,6 @@ export class aController {
     }
 
     @Post({ path: '/save', errorHandle : 'saveError' })
-
     save( @BodyParam() body: any) {
         return { save: 'ok' }
     }

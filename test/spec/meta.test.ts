@@ -23,7 +23,7 @@ class A {
 })
 class AController {
 
-    @Get({ path : 'list', name : 'test-list',  errorHandle : 'OnListError' })
+    @Get({ path : '/list', name : 'test-list',  errorHandle : 'OnListError' })
     list(){
         return 11
     }
@@ -33,7 +33,7 @@ class AController {
     }
 }
 @suite
-class DecratorMethod {
+class Medadata {
     @test
     actionclassMeta() {
         let d = new ActionClassMeta(A, 'test');
@@ -76,5 +76,6 @@ class DecratorMethod {
         assert.equal(d.localname, 'test-list')
         assert.equal(d.fullname, 'test.a.test-list')
         assert.equal(d.errorHandle, 'OnListError')
+        assert.deepEqual(d.path, ['/list'])
     }
 }

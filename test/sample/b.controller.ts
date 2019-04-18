@@ -1,4 +1,4 @@
-import { Controller, Get, Post, QueryParam } from "../src";
+import { Controller, Get, Post, QueryParam } from "src";
 import { get } from "https";
 
 

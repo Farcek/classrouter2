@@ -6,9 +6,8 @@
   "types": "./lib/index.d.ts",
   "scripts": {
     "tsc": "tsc",
-    "test": "ts-node test/server.ts",
-    "test1": "nyc mocha  -r ts-node/register -r tsconfig-paths/register test/**/*.test.ts",
-    "test2": "mocha -r ts-node/register -r tsconfig-paths/register test/**/*.test.ts",
+    "test": "mocha  -r ts-node/register -r tsconfig-paths/register test/**/*.test.ts",
+    "test:api": "ts-node  -r tsconfig-paths/register test/sample/server.ts",
     "build:lib": "tsc -p tsconfig.lib.json",
     "prenpm2push": "npm run build:lib",
     "npm2push": "npm publish"
@@ -32,6 +31,7 @@
     "source-map-support": "^0.5.12",
     "ts-node": "^8.0.3",
     "tsconfig-paths": "^3.8.0",
-    "typescript": "^3.4.3"
+    "typescript": "^3.4.3",
+    "unirest": "^0.6.0"
   }
 }
