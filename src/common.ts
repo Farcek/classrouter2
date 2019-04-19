@@ -27,6 +27,10 @@ export const $metaname = {
 
 };
 
+export const $types = {
+    controller : Symbol.for('di-controller'),
+}
+
 
 export enum HttpStatus {
     CONTINUE = 100,

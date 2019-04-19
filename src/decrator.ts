@@ -1,9 +1,11 @@
 import { Classtype, OController, OAction, IPipeTransform, OActionMethod, OActionClass, OArgumentParam, OPropertyParam, OErrorMethod, OActionclassMethod } from "./interface";
 import { HttpMethod, Paramtype, $metaname } from "./common";
+import { injectable } from "inversify";
 
 
 export function Controller(option: OController): ClassDecorator {
     return (target: Function) => {
+        injectable()(target);
         Reflect.defineMetadata($metaname.controller, option, target);
     }
 }
@@ -12,6 +14,7 @@ export function Controller(option: OController): ClassDecorator {
 
 function httpAction(method: HttpMethod, option: OAction) {
     return (target: Function | Object, propertyKey?: string, descriptor?: any) => {
+        
         if (propertyKey && descriptor) {
             let meta: OActionMethod = {
                 httpMethod: method,
@@ -37,6 +40,7 @@ function httpAction(method: HttpMethod, option: OAction) {
                 };
 
                 Reflect.defineMetadata($metaname.actionClass, meta, target);
+                injectable()(target);
             } else {
                 //console.log(target, '->', option)
                 throw new Error('name param requared');
@@ -66,11 +70,11 @@ export function Head(option: OAction) {
 }
 
 
-export function Action(errorHandle?:string ) {
+export function Action(errorHandle?: string) {
     return (target: Object, propertyKey: string, descriptor: any) => {
-        let option:OActionclassMethod = {
+        let option: OActionclassMethod = {
             errorHandle,
-            methodname : propertyKey
+            methodname: propertyKey
         };
         Reflect.defineMetadata($metaname.actionClassMethodname, option, target.constructor);
     }

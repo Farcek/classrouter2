@@ -7,6 +7,9 @@ import  express from 'express'
 async function startup(){
     let app =  express();
     new ClassrouterFactory()
+        .setupContainer((container)=>{
+            
+        })
         .setupController(aController)
         .setupResonsefilter(new JsonResponseFilter())
         .build(app, '/api');

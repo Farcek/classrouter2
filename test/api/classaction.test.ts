@@ -2,11 +2,10 @@ import 'reflect-metadata';
 import { suite, test } from "mocha-typescript";
 
 import { assert } from "chai";
-import { Get, ActionClassMeta, Action, HttpMethod, Controller, ActionMethodMeta, ControllerMeta } from "src";
 import { http } from './http';
 
 @suite
-class ApiMethod {
+class ApiMethodClassAction {
     @test
     async actionclass() {
         let r: any = await http.get('/api/a-controller/a-action?id=4&name=farcek');
@@ -22,7 +21,6 @@ class ApiMethod {
         let r: any = await http.get('/api/a-controller/a-action?id=0&name=farcek');
 
         assert.equal(r.txt, 'OnError - ok')
-
     }
 
     @test
@@ -32,7 +30,6 @@ class ApiMethod {
         assert.equal(r.err.e, 1)
         assert.equal(r.id, 1)
         assert.equal(r.name, 'error1')
-
     }
     @test
     async actionclassError2() {
@@ -41,8 +38,6 @@ class ApiMethod {
         assert.equal(r.n, 'error2')
         assert.equal(r.err.e, 2)
         assert.equal(r.id, 2)
-
     }
-
 
 }

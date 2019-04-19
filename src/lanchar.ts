@@ -2,6 +2,7 @@ import express from 'express';
 import { IFilterParam, Classtype, IPipeTransform, IResponseFilter } from './interface';
 import { ArgumentParamMeta, ActionMethodMeta, ActionClassMeta, PropertyParamMeta, MethodMeta } from './metadata';
 import { Paramtype } from './common';
+import { Container } from 'inversify';
 
 class ResponseFilterError {
     constructor(public error: any, public filter: IResponseFilter) {
@@ -10,6 +11,10 @@ class ResponseFilterError {
 }
 
 export class Lanchar {
+
+    constructor(public container: Container) {
+
+    }
 
     controllers: any = {};
 
@@ -116,7 +121,7 @@ export class Lanchar {
         res: express.Response,
         next: express.NextFunction) {
 
-        let ins = new classMeta.Actionclass();
+        let ins = this.container.get(classMeta.Actionclass);
 
         try {
             await this.propertiesInject(ins, classMeta.properyParams, req);
@@ -153,21 +158,21 @@ export class Lanchar {
 
 
 
-    getCont(name: string, cClass: Classtype) {
-        if (name in this.controllers) {
-            return this.controllers[name];
-        }
+    // getCont(name: string, cClass: Classtype) {
+    //     if (name in this.controllers) {
+    //         return this.controllers[name];
+    //     }
 
-        return this.controllers[name] = new cClass();
-    }
+    //     return this.controllers[name] = new cClass();
+    // }
 
     async  methodaction(actionmethodMeta: ActionMethodMeta,
         req: express.Request,
         res: express.Response,
         next: express.NextFunction) {
 
-        let ins = this.getCont(actionmethodMeta.fullname, actionmethodMeta.Controllerclass);
-
+        //let ins = this.getCont(actionmethodMeta.fullname, actionmethodMeta.Controllerclass);
+        let ins = this.container.get(actionmethodMeta.Controllerclass);
         try {
 
             let r = await this.methodExecut(ins, { error: null }, actionmethodMeta.methodMeta, req)

@@ -31,6 +31,8 @@ export class Builder {
             this.builderActionmethod(router, mMeta, [...paths, meta.path || '']);
         }
 
+        this.lanchar.container.bind(meta.Controllerclass).toSelf().inSingletonScope();
+
         let befores = this.factoryBefores(meta.befores)
 
         meta.path ? parent.use(meta.path, befores, router) : parent.use(befores, router);
@@ -42,13 +44,17 @@ export class Builder {
 
     builderActionclass(router: express.Router, meta: ActionClassMeta, paths: string[]) {
         console.log('class-action', meta.fullname, HttpMethod[meta.httpMethod], [...paths, meta.path].join(''));
+        this.lanchar.container.bind(meta.Actionclass).toSelf();
+
         setupMiddleware(router, meta.path, meta.httpMethod, this.factoryBefores(meta.befores), (req: express.Request, res: express.Response, next: express.NextFunction) => {
+            console.log('call class-action', meta.fullname)
             this.lanchar.classaction(meta, req, res, next).catch(next);
         });
     }
 
     builderActionmethod(router: express.Router, meta: ActionMethodMeta, paths: string[]) {
         console.log('method-action', meta.fullname, HttpMethod[meta.httpMethod], [...paths, meta.path].join(''));
+        
         setupMiddleware(router, meta.path, meta.httpMethod, this.factoryBefores(meta.befores), (req: express.Request, res: express.Response, next: express.NextFunction) => {
             this.lanchar.methodaction(meta, req, res, next).catch(next);
         });

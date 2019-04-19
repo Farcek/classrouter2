@@ -1,16 +1,31 @@
+
 import { Classtype, OController, IResponseFilter } from "./interface";
 import { Rootmeta } from "./metadata";
 import express from "express";
+import { Container } from "inversify";
 import { Builder } from "./builder";
 import { Lanchar } from "./lanchar";
+
 
 export class ClassrouterFactory {
 
 
+
     private root = new Rootmeta();
-    private lanchar = new Lanchar();
+    private container = new Container();
+    private lanchar = new Lanchar( this.container);
+    
     constructor() {
 
+    }
+
+    setupContainer(binder: (container: Container) => void) {
+
+        
+
+
+        binder(this.container);
+        return this
     }
 
     setupController(...controller: Classtype[]) {
@@ -48,6 +63,7 @@ export class ClassrouterFactory {
         }
 
         app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+            console.log('error', err)
             this.lanchar.response(err, req, res, next);
         });
     }
