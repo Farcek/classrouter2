@@ -6,7 +6,7 @@ import { Get, ActionClassMeta, Action, HttpMethod, Controller, ActionMethodMeta,
 @Get({ path: 'pa', name: "A", errorHandle: 'E1' })
 class A {
 
-    @Action('onError')
+    @Action({errorHandle : 'onError'})
     action() {
 
     }

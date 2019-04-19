@@ -29,7 +29,7 @@ export class bAction {
         }
     }
 
-    @ErrorHandle(Error1)
+    @ErrorHandle({ instanceOf: Error1 })
     onError1(err: Error1, @QueryParam('name') name: string, @CookieParam() cookie: any) {
         return {
             err,
@@ -39,7 +39,7 @@ export class bAction {
         }
     }
 
-    @ErrorHandle(Error2)
+    @ErrorHandle({ when: (err) => err instanceof Error2 })
     onError2(err: Error2) {
         return {
             err,

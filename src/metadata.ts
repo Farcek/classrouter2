@@ -31,7 +31,8 @@ export class ControllerMeta {
     classActions: { [name: string]: ActionClassMeta } = {};
     methodActions: { [name: string]: ActionMethodMeta } = {};
 
-    public errorMethods: { meta: MethodMeta, ErrorClass: Classtype }[] = [];
+
+    public errorMethods: { meta: MethodMeta, instanceOf?: Classtype, when?: { (errorType: any): boolean } }[] = [];
 
     get path() {
         return this.option.path;
@@ -82,7 +83,8 @@ export class ControllerMeta {
             if (errorMethods && Array.isArray(errorMethods)) {
                 for (let p of errorMethods) {
                     this.errorMethods.push({
-                        ErrorClass: p.ErrorClass,
+                        instanceOf: p.instanceOf,
+                        when: p.when,
                         meta: new MethodMeta(ref, p.methodname)
                     });
                 }
@@ -122,7 +124,7 @@ export class ActionClassMeta {
     public properyParams: PropertyParamMeta[] = [];
 
     public actionMethod: MethodMeta;
-    public errorMethods: { meta: MethodMeta, ErrorClass: Classtype }[] = [];
+    public errorMethods: { meta: MethodMeta, instanceOf?: Classtype, when?: { (err: any): boolean } }[] = [];
     public errorHandle1?: string;
 
     get httpMethod() {
@@ -175,7 +177,8 @@ export class ActionClassMeta {
             if (errorMethods && Array.isArray(errorMethods)) {
                 for (let p of errorMethods) {
                     this.errorMethods.push({
-                        ErrorClass: p.ErrorClass,
+                        instanceOf: p.instanceOf,
+                        when: p.when,
                         meta: new MethodMeta(ref, p.methodname)
                     });
                 }
@@ -198,9 +201,10 @@ export class ActionClassMeta {
 
             actionMethod: this.actionMethod.toMetajson(),
 
-            errorMethods: this.errorMethods.map(({ meta, ErrorClass }) => {
+            errorMethods: this.errorMethods.map(({ meta, instanceOf, when }) => {
                 return {
-                    ErrorClass: ErrorClass.name,
+                    instanceOf: instanceOf ? instanceOf.name : undefined,
+                    when: when ? true : false,
                     meta: meta.toMetajson()
                 }
             }),
@@ -287,9 +291,10 @@ export class ActionMethodMeta {
             method: HttpMethod[this.option.httpMethod],
             methodMeta: this.methodMeta.toMetajson(),
             errorHandle: this.errorHandle,
-            errorMethods: this.errorMethods.map(({ meta, ErrorClass }) => {
+            errorMethods: this.errorMethods.map(({ meta, instanceOf, when }) => {
                 return {
-                    ErrorClass: ErrorClass.name,
+                    instanceOf: instanceOf ? instanceOf.name : undefined,
+                    when: when ? true : false,
                     meta: meta.toMetajson()
                 }
             }),

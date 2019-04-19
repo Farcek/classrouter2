@@ -85,7 +85,8 @@ export interface OErrorArgument {
 
 export interface OErrorMethod {
     methodname: string;
-    ErrorClass: Classtype;
+    instanceOf?: Classtype;
+    when?: { (err: any): boolean };
 }
 
 

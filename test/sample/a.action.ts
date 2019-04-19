@@ -13,7 +13,7 @@ export class aAction {
     @HeaderParam()
     headers: any;
 
-    @Action('OnError')
+    @Action({errorHandle : 'OnError'})
     actionOk(@QueryParam('name') name: string, @CookieParam() cookie: any) {
         if (name == 'error') {
             throw new Error();

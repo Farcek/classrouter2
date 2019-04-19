@@ -14,7 +14,7 @@ export function Controller(option: OController): ClassDecorator {
 
 function httpAction(method: HttpMethod, option: OAction) {
     return (target: Function | Object, propertyKey?: string, descriptor?: any) => {
-        
+
         if (propertyKey && descriptor) {
             let meta: OActionMethod = {
                 httpMethod: method,
@@ -70,10 +70,10 @@ export function Head(option: OAction) {
 }
 
 
-export function Action(errorHandle?: string) {
+export function Action(opt?: { errorHandle?: string }) {
     return (target: Object, propertyKey: string, descriptor: any) => {
         let option: OActionclassMethod = {
-            errorHandle,
+            errorHandle: opt && opt.errorHandle,
             methodname: propertyKey
         };
         Reflect.defineMetadata($metaname.actionClassMethodname, option, target.constructor);
@@ -151,13 +151,21 @@ export const RequestParam = createParamDecoder(Paramtype.Request);
 ////#endregion
 
 
-export function ErrorHandle(errorType: Classtype) {
+export function ErrorHandle(opt: { instanceOf?: Classtype, when?: { (errorType: Classtype): boolean } }) {
     return (target: Object, property: string) => {
 
         let m: OErrorMethod = {
-            ErrorClass: errorType,
+            instanceOf: opt.instanceOf,
+            when: opt.when,
             methodname: property
         };
+
+        if (!(m.instanceOf || m.when)) {
+            console.log("instanceOf or when Param requared", target)
+            throw new Error('instanceOf or when Param requared')
+        }
+
+
 
         let params: OErrorMethod[] = Reflect.getMetadata($metaname.errorMethod, target.constructor);
         if (Array.isArray(params)) {

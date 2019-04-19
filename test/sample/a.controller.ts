@@ -45,7 +45,7 @@ export class aController {
         return { save: 'ok' }
     }
 
-    @ErrorHandle(Error)
+    @ErrorHandle({instanceOf : Error})
     onError(err: Error) {
         return {
             msg: err.message,

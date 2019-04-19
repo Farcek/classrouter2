@@ -141,8 +141,13 @@ export class Lanchar {
                 return;
             }
 
-            for (let { ErrorClass, meta } of classMeta.errorMethods) {
-                if (error instanceof ErrorClass) {
+            for (let { instanceOf, when, meta } of classMeta.errorMethods) {
+                if (instanceOf && (error instanceof instanceOf)) {
+                    let r = await this.methodExecut(ins, { error }, meta, req);
+                    await this.response(r, req, res, next);
+                    return;
+                }
+                if (when && typeof when == 'function' && when(error)) {
                     let r = await this.methodExecut(ins, { error }, meta, req);
                     await this.response(r, req, res, next);
                     return;
@@ -191,8 +196,13 @@ export class Lanchar {
                 return;
             }
 
-            for (let { ErrorClass, meta } of actionmethodMeta.errorMethods) {
-                if (error instanceof ErrorClass) {
+            for (let { instanceOf, when, meta } of actionmethodMeta.errorMethods) {
+                if (instanceOf && (error instanceof instanceOf)) {
+                    let r = await this.methodExecut(ins, { error }, meta, req);
+                    await this.response(r, req, res, next);
+                    return;
+                }
+                if (when && typeof when == 'function' && when(error)) {
                     let r = await this.methodExecut(ins, { error }, meta, req);
                     await this.response(r, req, res, next);
                     return;
