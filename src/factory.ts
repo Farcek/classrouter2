@@ -13,18 +13,16 @@ export class ClassrouterFactory {
 
     private root = new Rootmeta();
     private container = new Container();
-    private lanchar = new Lanchar( this.container);
-    
+    private lanchar = new Lanchar(this.container);
+
+    private binder?: (container: Container) => void
+
     constructor() {
 
     }
 
     setupContainer(binder: (container: Container) => void) {
-
-        
-
-
-        binder(this.container);
+        this.binder = binder;
         return this
     }
 
@@ -49,8 +47,17 @@ export class ClassrouterFactory {
 
 
 
+    private di() {
+
+        
+
+        if (this.binder) {
+            this.binder(this.container);
+        }
+    }
 
     build(app: express.Application, basepath?: string) {
+        this.di();
         let build = new Builder(this.lanchar);
 
         if (basepath) {

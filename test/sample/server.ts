@@ -1,20 +1,21 @@
 import "reflect-metadata";
-import { ClassrouterFactory, JsonResponseFilter } from "src";
+import { ClassrouterFactory, JsonResponseFilter, $types, ILogger } from "src";
 import { aController } from "./a.controller";
-import  express from 'express'
+import express from 'express'
+import { SampleLogger } from "./logger";
 
 
-async function startup(){
-    let app =  express();
+async function startup() {
+    let app = express();
     new ClassrouterFactory()
-        .setupContainer((container)=>{
-            
+        .setupContainer((container) => {
+            container.bind<ILogger>($types.Logger).to(SampleLogger).inSingletonScope();
         })
         .setupController(aController)
         .setupResonsefilter(new JsonResponseFilter())
         .build(app, '/api');
 
-    app.listen(3000,()=>{
+    app.listen(3000, () => {
         console.log('listen 3000');
     });
 }

@@ -28,7 +28,7 @@ export const $metaname = {
 };
 
 export const $types = {
-    controller : Symbol.for('di-controller'),
+    Logger : Symbol.for('logger'),
 }
 
 

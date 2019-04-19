@@ -102,3 +102,13 @@ export interface IFilterParam {
 export interface IResponseFilter {
     filter(param: IFilterParam): void | Promise<void>
 }
+
+
+export interface ILogger {
+    error: (message: string, attr?: Object) => void;
+    warn: (message: string, attr?: Object) => void;
+    info: (message: string, attr?: Object) => void;
+    verbose: (message: string, attr?: Object) => void;
+    debug: (message: string, attr?: Object) => void;
+    write: (level: string, message: string, attr?: Object) => void;
+}
