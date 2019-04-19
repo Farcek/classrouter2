@@ -1,12 +1,13 @@
 import { Controller, Get, Post, BodyParam, QueryParam, ErrorHandle } from "src";
 import { bController } from "./b.controller";
 import { aAction } from "./a.action";
+import { bAction } from "./b.action";
 
 
 @Controller({
     name: 'a-controller', path: '/a-controller',
     controllers: [bController],
-    actions: [aAction],
+    actions: [aAction, bAction],
 })
 export class aController {
 
