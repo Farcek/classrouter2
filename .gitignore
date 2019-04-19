@@ -1,5 +1,6 @@
 /lib
 /node_modules
 /tsc
-package-lock.json
+/package-lock.json
 /.nyc_output
+/.vscode
