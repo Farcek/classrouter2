@@ -227,15 +227,17 @@ export class Lanchar {
     }
 
 
-    async  methodCall(ins: any, method: string, args: any[]) {
+    async methodCall(ins: any, method: string, args: any[]) {
         try {
 
             if (method in ins && typeof ins[method] === 'function') {
                 let fn: Function = ins[method];
                 let r = fn.apply(ins, args);
 
-                return Promise.resolve(r);
+                return await Promise.resolve(r);
             }
+            console.log('not found method', method, ins);
+            throw new Error('not found method. method:' + method);
         } catch (error) {
             throw error;
         }
