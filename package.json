@@ -1,6 +1,6 @@
 {
   "name": "classrouter",
-  "version": "4.1.1",
+  "version": "4.1.2",
   "description": "typescript expressjs class router",
   "main": "./lib/index.js",
   "types": "./lib/index.d.ts",
@@ -18,7 +18,7 @@
     "express": "^4.16.4",
     "inversify": "^5.0.1",
     "reflect-metadata": "^0.1.13"
-  },
+  },  
   "devDependencies": {
     "@types/chai": "^4.1.7",
     "@types/express": "^4.16.1",
@@ -33,5 +33,13 @@
     "tsconfig-paths": "^3.8.0",
     "typescript": "^3.4.3",
     "unirest": "^0.6.0"
-  }
+  },
+  "keywords": [
+    "classrouter",
+    "class router",    
+    "Rest API router",
+    "express router",
+    "response filter",
+    "param pipe"
+  ]
 }
