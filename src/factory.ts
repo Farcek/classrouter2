@@ -79,4 +79,8 @@ export class ClassrouterFactory {
         return this.root.toMetajson();
     }
 
+    getRootmeta(){
+        return this.root;
+    }
+
 }

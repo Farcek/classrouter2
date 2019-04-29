@@ -1,29 +1,31 @@
 import { Classtype, OController, OAction, IPipeTransform, OActionMethod, OActionClass, OArgumentParam, OPropertyParam, OErrorMethod, OActionclassMethod } from "./interface";
 import { HttpMethod, Paramtype, $metaname } from "./common";
 import { injectable } from "inversify";
+import { ReflectClassmeta, decoratorFactoryClass, DecoratorType, decoratorFactoryMethodAndClass, decoratorFactoryMethod, decoratorFactoryArgumentAndProperty } from "@napp/reflect";
 
-
-export function Controller(option: OController): ClassDecorator {
-    return (target: Function) => {
-        injectable()(target);
-        Reflect.defineMetadata($metaname.controller, option, target);
-    }
+export function Controller(option: OController) {
+    return decoratorFactoryClass<void>((target, decoratorOption) => {
+        if (decoratorOption.decoratorType == DecoratorType.class) {
+            injectable()(target);
+            Reflect.defineMetadata($metaname.controller, option, target);
+        }
+    });
 }
+
+
 
 //#region  http methods
 
 function httpAction(method: HttpMethod, option: OAction) {
-    return (target: Function | Object, propertyKey?: string, descriptor?: any) => {
 
-        if (propertyKey && descriptor) {
+    return decoratorFactoryMethodAndClass<void>((target, decoratorOption) => {
+        if (decoratorOption.decoratorType == DecoratorType.method && decoratorOption.method) {
+            // method
             let meta: OActionMethod = {
                 httpMethod: method,
-                methodname: propertyKey,
+                methodname: decoratorOption.method.name,
                 option
             };
-
-
-
 
             let params: OActionMethod[] = Reflect.getMetadata($metaname.actionMethod, target.constructor);
             if (Array.isArray(params)) {
@@ -31,8 +33,8 @@ function httpAction(method: HttpMethod, option: OAction) {
             } else {
                 Reflect.defineMetadata($metaname.actionMethod, [meta], target.constructor);
             }
-
-        } else {
+        } else if (decoratorOption.decoratorType == DecoratorType.class) {
+            // class
             if (option.name) {
                 let meta: OActionClass = {
                     httpMethod: method, actionname: option.name,
@@ -45,9 +47,10 @@ function httpAction(method: HttpMethod, option: OAction) {
                 //console.log(target, '->', option)
                 throw new Error('name param requared');
             }
-
+        } else {
+            throw new Error('the decrator used to Class or Method');
         }
-    }
+    });
 }
 
 export function Get(option: OAction) {
@@ -69,15 +72,19 @@ export function Head(option: OAction) {
     return httpAction(HttpMethod.Head, option);
 }
 
-
 export function Action(opt?: { errorHandle?: string }) {
-    return (target: Object, propertyKey: string, descriptor: any) => {
-        let option: OActionclassMethod = {
-            errorHandle: opt && opt.errorHandle,
-            methodname: propertyKey
-        };
-        Reflect.defineMetadata($metaname.actionClassMethodname, option, target.constructor);
-    }
+
+    return decoratorFactoryMethod<void>((target, decoratorOption) => {
+        if (decoratorOption.decoratorType == DecoratorType.method && decoratorOption.method) {
+            let option: OActionclassMethod = {
+                errorHandle: opt && opt.errorHandle,
+                methodname: decoratorOption.method.name
+            };
+            Reflect.defineMetadata($metaname.actionClassMethodname, option, target.constructor);
+        } else {
+            throw new Error('the decrator used to only Method');
+        }
+    });
 }
 
 //#endregion
@@ -85,8 +92,7 @@ export function Action(opt?: { errorHandle?: string }) {
 //#region Params
 function createParamDecoder(paramType: Paramtype) {
     return (fieldname?: string | string[] | IPipeTransform, ...pipes: IPipeTransform[]) => {
-        return (target: Object, property: string, parameterIndex?: number) => {
-
+        return decoratorFactoryArgumentAndProperty<void>((target: Object, decoratorOption) => {
             let reqName: string[] = [];
             let _pipes: IPipeTransform[];
 
@@ -105,7 +111,11 @@ function createParamDecoder(paramType: Paramtype) {
                 _pipes = pipes;
             }
 
-            if (typeof parameterIndex === 'number') {
+
+
+            if (decoratorOption.decoratorType == DecoratorType.argument && decoratorOption.argument) {
+                let parameterIndex = decoratorOption.argument.index;
+                let property = decoratorOption.argument.method;
                 let m: OArgumentParam = {
                     paramType,
                     index: parameterIndex,
@@ -120,7 +130,9 @@ function createParamDecoder(paramType: Paramtype) {
                     Reflect.defineMetadata($metaname.paramArgument, [m], target.constructor, property);
                 }
 
-            } else {
+            } else if (decoratorOption.decoratorType == DecoratorType.property && decoratorOption.property) {
+                let property = decoratorOption.property.name;
+
                 let m: OPropertyParam = {
                     paramType,
                     property,
@@ -134,9 +146,10 @@ function createParamDecoder(paramType: Paramtype) {
                 } else {
                     Reflect.defineMetadata($metaname.paramProperty, [m], target.constructor);
                 }
+            } else {
+                throw new Error('the decrator used to Property or Argument');
             }
-
-        }
+        });
     }
 }
 
@@ -152,27 +165,30 @@ export const RequestParam = createParamDecoder(Paramtype.Request);
 
 
 export function ErrorHandle(opt: { instanceOf?: Classtype, when?: { (errorType: Classtype): boolean } }) {
-    return (target: Object, property: string) => {
+    return decoratorFactoryMethod<void>((target: Object, decoratorOption) => {
+        if (decoratorOption.decoratorType == DecoratorType.method && decoratorOption.method) {
+            let m: OErrorMethod = {
+                instanceOf: opt.instanceOf,
+                when: opt.when,
+                methodname: decoratorOption.method.name
+            };
 
-        let m: OErrorMethod = {
-            instanceOf: opt.instanceOf,
-            when: opt.when,
-            methodname: property
-        };
-
-        if (!(m.instanceOf || m.when)) {
-            console.log("instanceOf or when Param requared", target)
-            throw new Error('instanceOf or when Param requared')
-        }
+            if (!(m.instanceOf || m.when)) {
+                console.log("instanceOf or when Param requared", target)
+                throw new Error('instanceOf or when Param requared')
+            }
 
 
 
-        let params: OErrorMethod[] = Reflect.getMetadata($metaname.errorMethod, target.constructor);
-        if (Array.isArray(params)) {
-            params.push(m);
+            let params: OErrorMethod[] = Reflect.getMetadata($metaname.errorMethod, target.constructor);
+            if (Array.isArray(params)) {
+                params.push(m);
+            } else {
+                Reflect.defineMetadata($metaname.errorMethod, [m], target.constructor);
+            }
         } else {
-            Reflect.defineMetadata($metaname.errorMethod, [m], target.constructor);
+            throw new Error('the decrator used to only Method');
         }
 
-    }
+    });
 }

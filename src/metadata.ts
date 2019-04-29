@@ -184,6 +184,7 @@ export class ActionClassMeta {
                 }
             }
         } else {
+            console.log('Action meta todorhoilogdoogui bna.')
             console.log(basename, '->', ref)
             throw new Error('Action meta todorhoilogdoogui bna. ');
         }
