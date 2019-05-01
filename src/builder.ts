@@ -8,29 +8,29 @@ export class Builder {
     constructor(private lanchar: Lanchar) {
 
     }
-    buildRoot(router: express.Router, meta: Rootmeta, paths: string[]) {
+    buildRoot(router: express.Router, meta: Rootmeta) {
         for (let cName of Object.keys(meta.controllers)) {
             let cMeta = meta.controllers[cName];
-            this.builderController(router, cMeta, paths);
+            this.builderController(router, cMeta);
         }
     }
-    builderController(parent: express.Router, meta: ControllerMeta, paths: string[]) {
+    builderController(parent: express.Router, meta: ControllerMeta) {
         let router = express.Router();
         this.lanchar.container.bind(meta.Controllerclass).toSelf().inSingletonScope();
         for (let cName of Object.keys(meta.controllers)) {
             let cMeta = meta.controllers[cName];
-            this.builderController(router, cMeta, [...paths, meta.path || '']);
+            this.builderController(router, cMeta);
         }
 
         for (let aName of Object.keys(meta.classActions)) {
             let aMeta = meta.classActions[aName];
             this.lanchar.container.bind(aMeta.Actionclass).toSelf();
-            this.builderActionclass(router, aMeta, [...paths, meta.path || '']);
+            this.builderActionclass(router, aMeta);
         }
 
         for (let mName of Object.keys(meta.methodActions)) {
             let mMeta = meta.methodActions[mName];
-            this.builderActionmethod(router, mMeta, [...paths, meta.path || '']);
+            this.builderActionmethod(router, mMeta);
         }
 
 
@@ -44,17 +44,17 @@ export class Builder {
         return befores.map(factory => factory())
     }
 
-    builderActionclass(router: express.Router, meta: ActionClassMeta, paths: string[]) {
+    builderActionclass(router: express.Router, meta: ActionClassMeta) {
         let logger: ILogger = this.lanchar.container.get($types.Logger);
-        logger.verbose(`${meta.fullname} ${[...paths, meta.path].join('')} [${HttpMethod[meta.httpMethod]}, class-action]`, { fullname: meta.fullname });
+        logger.verbose(`${HttpMethod[meta.httpMethod]} class: ${meta.fullname}`, { path: meta.fullpaths });
         setupMiddleware(router, meta.path, meta.httpMethod, this.factoryBefores(meta.befores), (req: express.Request, res: express.Response, next: express.NextFunction) => {
             this.lanchar.classaction(meta, req, res, next).catch(next);
         });
     }
 
-    builderActionmethod(router: express.Router, meta: ActionMethodMeta, paths: string[]) {        
+    builderActionmethod(router: express.Router, meta: ActionMethodMeta) {
         let logger: ILogger = this.lanchar.container.get($types.Logger);
-        logger.verbose(`${meta.fullname} ${[...paths, meta.path].join('')} [${HttpMethod[meta.httpMethod]}, method-action]`, { fullname: meta.fullname });
+        logger.verbose(`${HttpMethod[meta.httpMethod]} method: ${meta.fullname}`, { paths: meta.fullpaths });
         setupMiddleware(router, meta.path, meta.httpMethod, this.factoryBefores(meta.befores), (req: express.Request, res: express.Response, next: express.NextFunction) => {
             this.lanchar.methodaction(meta, req, res, next).catch(next);
         });

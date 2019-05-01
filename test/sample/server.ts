@@ -7,13 +7,19 @@ import { SampleLogger } from "./logger";
 
 async function startup() {
     let app = express();
-    new ClassrouterFactory()
-        .setupContainer((container) => {
+    let factory = new ClassrouterFactory({
+        basePath: '/api',
+        bind: (container) => {
             container.bind<ILogger>($types.Logger).to(SampleLogger).inSingletonScope();
-        })
-        .setupController(aController)
-        .setupResonsefilter(new JsonResponseFilter())
-        .build(app, '/api');
+        },
+        controllers: [aController],
+        responseFilters: {
+            default: new JsonResponseFilter(),
+            filters: []
+        }
+    })
+
+    factory.build(app);
 
     app.listen(3000, () => {
         console.log('listen 3000');

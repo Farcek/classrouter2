@@ -7,80 +7,70 @@ import { Builder } from "./builder";
 import { Lanchar } from "./lanchar";
 
 
+export interface PClassrouterFactory {
+    basePath?: string;
+    bind: (container: Container) => void;
+
+    controllers: Classtype[];
+    responseFilters: {
+        default: IResponseFilter,
+        filters: IResponseFilter[]
+    }
+}
 export class ClassrouterFactory {
 
-
-
+    private _basePath?: string;
     private root = new Rootmeta();
     private container = new Container();
     private lanchar = new Lanchar(this.container);
 
-    private binder?: (container: Container) => void
 
-    constructor() {
-
-    }
-
-    setupContainer(binder: (container: Container) => void) {
-        this.binder = binder;
-        return this
-    }
-
-    setupController(...controller: Classtype[]) {
-        for (let c of controller) {
+    constructor(options: PClassrouterFactory) {
+        this._basePath = options.basePath;
+        options.bind(this.container);
+        for (let c of options.controllers) {
             this.root.registerController(c, '');
         }
-        return this;
-    }
-
-    setupDefaultResponseFilter(filter: IResponseFilter) {
-        this.lanchar.defaultResponse = filter;
-        return this;
-    }
-    setupResonsefilter(...filter: IResponseFilter[]) {
-
-        for (let f of filter) {
+        this.lanchar.defaultResponse = options.responseFilters.default;
+        for (let f of options.responseFilters.filters) {
             this.lanchar.responseFilters.push(f);
         }
-        return this;
+
+    }
+
+    get basePath() {
+        return this._basePath;
+    }
+
+    get rootMetada() {
+        return this.root;
     }
 
 
-
-    private di() {
-
-        
-
-        if (this.binder) {
-            this.binder(this.container);
-        }
-    }
-
-    build(app: express.Application, basepath?: string) {
-        this.di();
+    build(app: express.Application) {
         let build = new Builder(this.lanchar);
 
-        if (basepath) {
+        if (this.basePath) {
             let route = express.Router();
 
-            build.buildRoot(route, this.root, [basepath]);
-            app.use(basepath, route);
+            build.buildRoot(route, this.root);
+            app.use(this.basePath, route);
         } else {
-            build.buildRoot(app, this.root, []);
+            build.buildRoot(app, this.root);
         }
 
         app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
             console.log('error', err)
             this.lanchar.response(err, req, res, next);
         });
+
+        return this.root;
     }
 
     toMetajson() {
         return this.root.toMetajson();
     }
 
-    getRootmeta(){
-        return this.root;
-    }
+
 
 }

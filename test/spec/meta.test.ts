@@ -36,7 +36,7 @@ class AController {
 class Medadata {
     @test
     actionclassMeta() {
-        let d = new ActionClassMeta(A, 'test');
+        let d = new ActionClassMeta(A, 'test',[]);
 
         assert.isArray(d.path, 'class action path array')
         assert.lengthOf(d.path, 1, 'class action path array leng')
@@ -52,7 +52,7 @@ class Medadata {
 
     @test
     controllerMeta() {
-        let d = new ControllerMeta(AController, 'test');
+        let d = new ControllerMeta(AController, 'test',[]);
         assert.equal(d.Controllerclass, AController)
         assert.equal(d.befores.length, 1)
         assert.equal(d.classActions.A.Actionclass, A)
@@ -61,7 +61,7 @@ class Medadata {
 
     @test
     actionMethod() {
-        let c = new ControllerMeta(AController, 'test');
+        let c = new ControllerMeta(AController, 'test',[]);
 
         let mActions = Object.keys(c.methodActions);
 

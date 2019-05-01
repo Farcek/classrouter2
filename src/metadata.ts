@@ -8,7 +8,7 @@ export class Rootmeta {
     controllers: { [name: string]: ControllerMeta } = {};
 
     registerController(controller: Classtype, rootname: string): void {
-        let meta = new ControllerMeta(controller, rootname);
+        let meta = new ControllerMeta(controller, rootname, []);
 
         this.controllers[meta.localname] = meta;
     }
@@ -46,16 +46,18 @@ export class ControllerMeta {
         return this.option.befores || []
     }
 
-    constructor(private ref: Classtype, private basename: string) {
+    constructor(private ref: Classtype, private basename: string, basepath: string[]) {
         let option: OController = Reflect.getMetadata($metaname.controller, ref);
         if (option && option.name) {
             this.option = option;
             this.fullname = [basename, this.localname = option.name].filter(v => v).join('.');
 
+            let mepath = [...basepath, option.path || ''].filter(v => v).join('');
+
             // controllers
             if (option.controllers) {
                 for (let child of option.controllers) {
-                    let m = new ControllerMeta(child, this.fullname);
+                    let m = new ControllerMeta(child, this.fullname, [mepath]);
                     this.controllers[m.localname] = m;
                 }
             }
@@ -64,7 +66,7 @@ export class ControllerMeta {
             // class actions
             if (option.actions) {
                 for (let actionClass of option.actions) {
-                    let m = new ActionClassMeta(actionClass, this.fullname);
+                    let m = new ActionClassMeta(actionClass, this.fullname, [mepath]);
                     this.classActions[m.localname] = m;
                 }
             }
@@ -73,7 +75,7 @@ export class ControllerMeta {
             let actionMethods: OActionMethod[] = Reflect.getMetadata($metaname.actionMethod, ref);
             if (actionMethods && Array.isArray(actionMethods)) {
                 for (let actionMethod of actionMethods) {
-                    let m = new ActionMethodMeta(this, this.fullname, actionMethod);
+                    let m = new ActionMethodMeta(this, this.fullname, actionMethod, [mepath]);
                     this.methodActions[m.localname] = m;
                 }
             }
@@ -117,7 +119,9 @@ export class ControllerMeta {
 }
 
 export class ActionClassMeta {
+
     public fullname: string;
+    public fullpaths: string[] = [];
     public localname: string;
 
     private option: OActionClass;
@@ -151,14 +155,19 @@ export class ActionClassMeta {
         return this.option.option.errorHandle;
     }
 
-    constructor(private ref: Classtype, private basename: string) {
+    constructor(private ref: Classtype, public basename: string, basepath: string[]) {
         let option: OActionClass = Reflect.getMetadata($metaname.actionClass, ref);
         if (option) {
             this.option = option;
-            this.fullname = [basename, this.localname = option.actionname].filter(v => v).join('.');
+            this.fullname = [this.basename, this.localname = option.actionname].filter(v => v).join('.');
+
+            for (let p of this.path) {
+                this.fullpaths.push([...basepath, this.path[0]].filter(v => v).join(''));
+            }
 
             let actionMethodOption: OActionclassMethod = Reflect.getMetadata($metaname.actionClassMethodname, ref);
             if (!actionMethodOption) {
+                console.log('action method not found', this.fullname);
                 throw Error("action method not found");
             }
             this.errorHandle1 = actionMethodOption.errorHandle;
@@ -189,6 +198,8 @@ export class ActionClassMeta {
             throw new Error('Action meta todorhoilogdoogui bna. ');
         }
     }
+
+
 
     toMetajson(): any {
         return {
@@ -223,7 +234,7 @@ export class MethodMeta {
 
     constructor(ref: Classtype, public methodname: string) {
         if (!methodname) {
-            console.log('Action method todorhoilogdoogui bna.')
+            console.log('Action method todorhoilogdoogui bna.', ref)
             throw new Error('Action method todorhoilogdoogui bna. ');
         }
 
@@ -247,7 +258,10 @@ export class MethodMeta {
 }
 
 export class ActionMethodMeta {
+
+    public basename: string;
     public fullname: string;
+    public fullpaths: string[]= [];
     public localname: string;
 
     methodMeta: MethodMeta;
@@ -279,8 +293,12 @@ export class ActionMethodMeta {
         return this.option.option.befores || []
     }
 
-    constructor(private controllerMeta: ControllerMeta, private basename: string, private option: OActionMethod) {
-        this.fullname = [basename, this.localname = option.option.name || option.methodname].filter(v => v).join('.');
+    constructor(private controllerMeta: ControllerMeta, basename: string, private option: OActionMethod, basepath: string[]) {
+        this.fullname = [(this.basename = basename), this.localname = option.option.name || option.methodname].filter(v => v).join('.');
+
+        for (let p of this.path) {
+            this.fullpaths.push([...basepath, this.path[0]].filter(v => v).join(''));
+        }
 
         this.methodMeta = new MethodMeta(controllerMeta.Controllerclass, option.methodname)
     }
