@@ -74,18 +74,20 @@ async function startup() {
     let app = express();
     app.use(morgan('dev'));
 
-    new ClassrouterFactory()
-        .setupContainer((container) => {
+    let factory = new ClassrouterFactory({        
+        bind: (container) => {
             // InversifyJS DI container
             container.bind<ILogger>($types.Logger).to(SampleLogger).inSingletonScope();
-        })
-        .setupController(HomeController)
-        .setupController(UserController)
+        },
+        controllers: [HomeController, UserController],
+        responseFilters: {
+            default: new JsonResponseFilter(),
+            filters: [/*XML, Plan, File, */] // your custom response filters
+        }
+    });
 
-        .setupResonsefilter(new JsonResponseFilter())
-        .setupResonsefilter(/*XML, Plan, File, */) // your custom response filters
-        
-        .build(app);
+    factory.build(app);
+
 
     app.listen(3000, () => {
         console.log('listen 3000');
