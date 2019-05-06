@@ -1,7 +1,7 @@
 
 import { Classtype, OController, IResponseFilter } from "./interface";
 import { Rootmeta } from "./metadata";
-import express from "express";
+import * as express from "express";
 import { Container } from "inversify";
 import { Builder } from "./builder";
 import { Lanchar } from "./lanchar";
@@ -14,7 +14,7 @@ export interface PClassrouterFactory {
     controllers: Classtype[];
     responseFilters: {
         default: IResponseFilter,
-        filters: IResponseFilter[]
+        filters?: IResponseFilter[]
     }
 }
 export class ClassrouterFactory {
@@ -32,9 +32,12 @@ export class ClassrouterFactory {
             this.root.registerController(c, '');
         }
         this.lanchar.defaultResponse = options.responseFilters.default;
-        for (let f of options.responseFilters.filters) {
-            this.lanchar.responseFilters.push(f);
+        if (options.responseFilters.filters) {
+            for (let f of options.responseFilters.filters) {
+                this.lanchar.responseFilters.push(f);
+            }
         }
+
 
     }
 
@@ -61,7 +64,7 @@ export class ClassrouterFactory {
 
         app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
             console.log('error', err)
-            this.lanchar.response(err, req, res, next);
+            this.lanchar.response(err, req, res);
         });
 
         return this.root;

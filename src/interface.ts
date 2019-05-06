@@ -1,5 +1,5 @@
 import { HttpMethod, Paramtype } from "./common";
-import express from 'express';
+import * as express from 'express';
 
 export interface Classtype {
     new(...args: any[]): any

@@ -1,14 +1,10 @@
-import express from 'express';
-import { IFilterParam, Classtype, IPipeTransform, IResponseFilter } from './interface';
+import * as express from 'express';
+import { IFilterParam, Classtype, IPipeTransform, IResponseFilter, ILogger } from './interface';
 import { ArgumentParamMeta, ActionMethodMeta, ActionClassMeta, PropertyParamMeta, MethodMeta } from './metadata';
-import { Paramtype } from './common';
+import { Paramtype, $types } from './common';
 import { Container } from 'inversify';
 
-class ResponseFilterError {
-    constructor(public error: any, public filter: IResponseFilter) {
 
-    }
-}
 
 export class Lanchar {
 
@@ -19,10 +15,12 @@ export class Lanchar {
     controllers: any = {};
 
     defaultResponse?: IResponseFilter;
-    responseFilters: IResponseFilter[] = []
-    async response(actionResult: any, req: express.Request,
-        res: express.Response,
-        next: express.NextFunction) {
+    responseFilters: IResponseFilter[] = [];
+
+    get logger(): ILogger {
+        return this.container.get($types.Logger);
+    }
+    async response(actionResult: any, req: express.Request, res: express.Response) {
 
         let param: IFilterParam = {
             actionResult,
@@ -35,7 +33,8 @@ export class Lanchar {
             try {
                 await filter.filter(param);
             } catch (error) {
-                throw new ResponseFilterError(error, filter);
+                this.logger.error("the filter cannot send response", { actionResult, filter })
+                res.end();
             }
 
             if (param.handled) {
@@ -48,7 +47,8 @@ export class Lanchar {
             try {
                 await this.defaultResponse.filter(param);
             } catch (error) {
-                throw new ResponseFilterError(error, this.defaultResponse);
+                this.logger.error("default filter cannot send response", { actionResult, filter: this.defaultResponse })
+                res.end();
             }
 
             if (param.handled) {
@@ -56,7 +56,15 @@ export class Lanchar {
             }
         }
 
-        res.end('not handled response filter');
+        try {
+            res.end('not handled response filter');
+        } catch (error) {
+            try {
+                res.end();
+            } catch (error) {
+
+            }
+        }
     }
 
     transformValue(startValue: any, pipes: IPipeTransform[]) {
@@ -123,53 +131,52 @@ export class Lanchar {
 
         let ins = this.container.get(classMeta.Actionclass);
 
+        // console.log('333333 ', ins)
+
         try {
             await this.propertiesInject(ins, classMeta.properyParams, req);
-            let r = await this.methodExecut(ins, { error: null }, classMeta.actionMethod, req)
-            await this.response(r, req, res, next);
+            let r = await this.methodExecut(ins, { error: null }, classMeta.actionMethod, req);
+
+            await this.response(r, req, res);
         } catch (error) {
 
-            if (error instanceof ResponseFilterError) {
-                console.log('cannot send response filter error', error.error, error.filter);
+            try {
+                if (classMeta.errorHandle1) {
+                    let r = await this.methodCall(ins, classMeta.errorHandle1, [error]);
+                    await this.response(r, req, res);
+                    return;
+                }
+
+                // console.log('66666666')
+
+                for (let { instanceOf, when, meta } of classMeta.errorMethods) {
+                    if (instanceOf && (error instanceof instanceOf)) {
+                        let r = await this.methodExecut(ins, { error }, meta, req);
+                        await this.response(r, req, res);
+                        return;
+                    }
+                    if (when && typeof when == 'function' && when(error)) {
+                        let r = await this.methodExecut(ins, { error }, meta, req);
+                        await this.response(r, req, res);
+                        return;
+                    }
+                }
+                // console.log('55555555555555')
+                if (classMeta.errorHandle2) {
+                    let r = await this.methodCall(ins, classMeta.errorHandle2, [error]);
+                    await this.response(r, req, res);
+                    return;
+                }
+
+                next(error);
+            } catch (error) {
+                console.log('cannot execut error handle', error);
                 res.end();
-                return;
             }
-
-            if (classMeta.errorHandle1) {
-                let r = await this.methodCall(ins, classMeta.errorHandle1, [error]);
-                await this.response(r, req, res, next);
-                return;
-            }
-
-            for (let { instanceOf, when, meta } of classMeta.errorMethods) {
-                if (instanceOf && (error instanceof instanceOf)) {
-                    let r = await this.methodExecut(ins, { error }, meta, req);
-                    await this.response(r, req, res, next);
-                    return;
-                }
-                if (when && typeof when == 'function' && when(error)) {
-                    let r = await this.methodExecut(ins, { error }, meta, req);
-                    await this.response(r, req, res, next);
-                    return;
-                }
-            }
-            if (classMeta.errorHandle2) {
-                let r = await this.methodCall(ins, classMeta.errorHandle2, [error]);
-                await this.response(r, req, res, next);
-            }
-
         }
     }
 
 
-
-    // getCont(name: string, cClass: Classtype) {
-    //     if (name in this.controllers) {
-    //         return this.controllers[name];
-    //     }
-
-    //     return this.controllers[name] = new cClass();
-    // }
 
     async  methodaction(actionmethodMeta: ActionMethodMeta,
         req: express.Request,
@@ -181,32 +188,34 @@ export class Lanchar {
         try {
 
             let r = await this.methodExecut(ins, { error: null }, actionmethodMeta.methodMeta, req)
-            await this.response(r, req, res, next);
+            await this.response(r, req, res);
         } catch (error) {
 
-            if (error instanceof ResponseFilterError) {
-                console.log('cannot send response filter error', error.error, error.filter);
+            try {
+                if (actionmethodMeta.errorHandle) {
+                    let r = await this.methodCall(ins, actionmethodMeta.errorHandle, [error]);
+                    await this.response(r, req, res);
+                    return;
+                }
+
+                for (let { instanceOf, when, meta } of actionmethodMeta.errorMethods) {
+                    if (instanceOf && (error instanceof instanceOf)) {
+                        let r = await this.methodExecut(ins, { error }, meta, req);
+                        await this.response(r, req, res);
+                        return;
+                    }
+                    if (when && typeof when == 'function' && when(error)) {
+                        let r = await this.methodExecut(ins, { error }, meta, req);
+                        await this.response(r, req, res);
+                        return;
+                    }
+                }
+
+                next(error);
+            } catch (error) {
+                console.log('cannot execut error handle', error);
                 res.end();
                 return;
-            }
-
-            if (actionmethodMeta.errorHandle) {
-                let r = await this.methodCall(ins, actionmethodMeta.errorHandle, [error]);
-                await this.response(r, req, res, next);
-                return;
-            }
-
-            for (let { instanceOf, when, meta } of actionmethodMeta.errorMethods) {
-                if (instanceOf && (error instanceof instanceOf)) {
-                    let r = await this.methodExecut(ins, { error }, meta, req);
-                    await this.response(r, req, res, next);
-                    return;
-                }
-                if (when && typeof when == 'function' && when(error)) {
-                    let r = await this.methodExecut(ins, { error }, meta, req);
-                    await this.response(r, req, res, next);
-                    return;
-                }
             }
         }
     }
@@ -214,6 +223,9 @@ export class Lanchar {
 
 
     async  argumentBuild(argumentMetas: ArgumentParamMeta[], req: express.Request) {
+
+        console.log('argumentMetas', argumentMetas, req.body)
+
         let args: any[] = [];
         for (let p of argumentMetas) {
             let starter = this.resolveValue(p.paramtype, p.reqFieldnames, req);

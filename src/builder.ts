@@ -37,11 +37,16 @@ export class Builder {
 
         let befores = this.factoryBefores(meta.befores)
 
+        
+
         meta.path ? parent.use(meta.path, befores, router) : parent.use(befores, router);
     }
 
     factoryBefores(befores: IMiddlewareFactory[]) {
-        return befores.map(factory => factory())
+        return befores.map(factory => {
+            // console.log('before factory', factory)
+            return factory();
+        })
     }
 
     builderActionclass(router: express.Router, meta: ActionClassMeta) {
@@ -64,6 +69,9 @@ export class Builder {
 
 
 function setupMiddleware(router: express.Router, path: string[], method: HttpMethod, befores: IMiddleware[], action: IMiddleware) {
+
+    // console.log('befores -->', typeof befores, Array.isArray(befores), Array.isArray(befores[0]), befores)
+
     if (Array.isArray(path) && path.length) {
         if (method === HttpMethod.Get) {
             router.get(path, befores, action);

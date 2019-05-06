@@ -143,9 +143,7 @@ export class ActionClassMeta {
     get Actionclass() {
         return this.ref;
     }
-    get methodname() {
-        return this.option.actionname;
-    }
+    
 
     get befores() {
         return this.option.option.befores || []
@@ -261,7 +259,7 @@ export class ActionMethodMeta {
 
     public basename: string;
     public fullname: string;
-    public fullpaths: string[]= [];
+    public fullpaths: string[] = [];
     public localname: string;
 
     methodMeta: MethodMeta;
