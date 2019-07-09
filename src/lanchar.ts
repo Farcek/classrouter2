@@ -224,7 +224,7 @@ export class Lanchar {
 
     async  argumentBuild(argumentMetas: ArgumentParamMeta[], req: express.Request) {
 
-        console.log('argumentMetas', argumentMetas, req.body)
+        //console.log('argumentMetas', argumentMetas, req.body)
 
         let args: any[] = [];
         for (let p of argumentMetas) {

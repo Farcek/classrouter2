@@ -1,6 +1,6 @@
 {
   "name": "classrouter",
-  "version": "4.2.2",
+  "version": "4.2.3",
   "description": "typescript expressjs class router",
   "main": "./lib/index.js",
   "types": "./lib/index.d.ts",
