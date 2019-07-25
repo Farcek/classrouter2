@@ -63,8 +63,13 @@ export class ClassrouterFactory {
         }
 
         app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-            console.log('error', err)
-            this.lanchar.response(err, req, res);
+            console.log('---------------------------------------------------')
+            console.log(err)
+            console.log('---------------------------------------------------')
+
+            this.lanchar.response(err, req, res)
+                .catch(err => next(err))
+
         });
 
         return this.root;

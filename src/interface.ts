@@ -94,10 +94,12 @@ export interface OErrorMethod {
 
 
 export interface IFilterParam {
-    actionResult: any
-    expressRes: express.Response
-    expressReq: express.Request
-    handled: boolean
+    actionResult: any;
+    expressRes: express.Response;
+    expressReq: express.Request;
+    handled: boolean;
+
+    refilter: (result: any) => Promise<void>
 }
 
 export interface IResponseFilter {

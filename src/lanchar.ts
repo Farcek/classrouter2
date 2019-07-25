@@ -26,7 +26,11 @@ export class Lanchar {
             actionResult,
             expressRes: res,
             expressReq: req,
-            handled: false
+            handled: false,
+
+            refilter: async (result) => {
+                return await this.response(result, req, res);
+            }
         }
 
         for (const filter of this.responseFilters) {
@@ -34,7 +38,7 @@ export class Lanchar {
                 await filter.filter(param);
             } catch (error) {
                 this.logger.error("the filter cannot send response", { actionResult, filter })
-                res.end();
+                throw error;
             }
 
             if (param.handled) {
@@ -48,7 +52,7 @@ export class Lanchar {
                 await this.defaultResponse.filter(param);
             } catch (error) {
                 this.logger.error("default filter cannot send response", { actionResult, filter: this.defaultResponse })
-                res.end();
+                throw error;
             }
 
             if (param.handled) {
@@ -56,15 +60,16 @@ export class Lanchar {
             }
         }
 
-        try {
-            res.end('not handled response filter');
-        } catch (error) {
-            try {
-                res.end();
-            } catch (error) {
+        // try {
+        //     res.end('not handled response filter');
+        // } catch (error) {
+        //     try {
+        //         res.end();
+        //     } catch (error) {
 
-            }
-        }
+        //     }
+        // }
+        throw new Error('not handled response filter');
     }
 
     transformValue(startValue: any, pipes: IPipeTransform[]) {
@@ -138,13 +143,13 @@ export class Lanchar {
             let r = await this.methodExecut(ins, { error: null }, classMeta.actionMethod, req);
 
             await this.response(r, req, res);
+
         } catch (error) {
 
             try {
                 if (classMeta.errorHandle1) {
                     let r = await this.methodCall(ins, classMeta.errorHandle1, [error]);
-                    await this.response(r, req, res);
-                    return;
+                    return await this.response(r, req, res);
                 }
 
                 // console.log('66666666')
@@ -152,26 +157,24 @@ export class Lanchar {
                 for (let { instanceOf, when, meta } of classMeta.errorMethods) {
                     if (instanceOf && (error instanceof instanceOf)) {
                         let r = await this.methodExecut(ins, { error }, meta, req);
-                        await this.response(r, req, res);
-                        return;
+                        return await this.response(r, req, res);
+
                     }
                     if (when && typeof when == 'function' && when(error)) {
                         let r = await this.methodExecut(ins, { error }, meta, req);
-                        await this.response(r, req, res);
-                        return;
+                        return await this.response(r, req, res);
                     }
                 }
                 // console.log('55555555555555')
                 if (classMeta.errorHandle2) {
                     let r = await this.methodCall(ins, classMeta.errorHandle2, [error]);
-                    await this.response(r, req, res);
-                    return;
+                    return await this.response(r, req, res);
                 }
 
                 next(error);
             } catch (error) {
                 console.log('cannot execut error handle', error);
-                res.end();
+                res.end("cannot execut error handle");
             }
         }
     }
@@ -194,8 +197,8 @@ export class Lanchar {
             try {
                 if (actionmethodMeta.errorHandle) {
                     let r = await this.methodCall(ins, actionmethodMeta.errorHandle, [error]);
-                    await this.response(r, req, res);
-                    return;
+                    return await this.response(r, req, res);
+
                 }
 
                 for (let { instanceOf, when, meta } of actionmethodMeta.errorMethods) {
@@ -206,16 +209,14 @@ export class Lanchar {
                     }
                     if (when && typeof when == 'function' && when(error)) {
                         let r = await this.methodExecut(ins, { error }, meta, req);
-                        await this.response(r, req, res);
-                        return;
+                        return await this.response(r, req, res);
                     }
                 }
 
                 next(error);
             } catch (error) {
                 console.log('cannot execut error handle', error);
-                res.end();
-                return;
+                res.end('cannot execut error handle');
             }
         }
     }

@@ -1,15 +1,16 @@
 import 'reflect-metadata';
-import { suite, test } from "mocha-typescript";
+import { suite, test, only } from "mocha-typescript";
 
 import { assert } from "chai";
 import { http } from './http';
 
 @suite
+@only
 class ApiMethodClassAction {
     @test
+    @only
     async actionclass() {
         let r: any = await http.get('/api/a-controller/a-action?id=4&name=farcek');
-
         assert.equal(r.n, 'a-action')
         assert.equal(r.id, 8)
         assert.equal(r.name, 'farcek')
