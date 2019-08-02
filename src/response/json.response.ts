@@ -9,11 +9,11 @@ export class JsonResponseFilter implements IResponseFilter {
         }
 
         if (err instanceof Exception) {
-            let err: IHttpException = <any>actionResult;
-            if (err.status) {
-                expressRes.status(err.status).json(actionResult.toJson());
+
+            if ((err as any).status) {
+                expressRes.status((err as any).status).json(err.toJson());
             } else {
-                expressRes.status(500).json(actionResult.toJson());
+                expressRes.status(500).json(err.toJson());
             }
         } else {
             expressRes.json(actionResult);
