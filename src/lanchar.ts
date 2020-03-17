@@ -1,13 +1,14 @@
-import { IFilterParam, Classtype, IPipeTransform, IResponseFilter, ILogger, IExpressRequest, IExpressResponse, IExpressNext } from './interface';
+import { IFilterParam, Classtype, IPipeTransform, IResponseFilter, ILogger, IExpressRequest, IExpressResponse, IExpressNext, IErrorParser } from './interface';
 import { ArgumentParamMeta, ActionMethodMeta, ActionClassMeta, PropertyParamMeta, MethodMeta } from './metadata';
-import { Paramtype, $types } from './common';
+import { Paramtype } from './common';
+import { ExceptionConvert } from '@napp/exception';
 
 
 
 
 export class Lanchar {
 
-    constructor(private logger: ILogger) {
+    constructor(private logger: ILogger, private errorParser: IErrorParser) {
 
     }
 
@@ -35,7 +36,7 @@ export class Lanchar {
                 await filter.filter(param);
             } catch (error) {
                 this.logger('error', "the filter cannot send response", { actionResult, filter })
-                throw error;
+                throw ExceptionConvert(error);
             }
 
             if (param.handled) {
@@ -49,7 +50,7 @@ export class Lanchar {
                 await this.defaultResponse.filter(param);
             } catch (error) {
                 this.logger('error', "default filter cannot send response", { actionResult, filter: this.defaultResponse })
-                throw error;
+                throw ExceptionConvert(error);
             }
 
             if (param.handled) {
@@ -57,15 +58,6 @@ export class Lanchar {
             }
         }
 
-        // try {
-        //     res.end('not handled response filter');
-        // } catch (error) {
-        //     try {
-        //         res.end();
-        //     } catch (error) {
-
-        //     }
-        // }
         throw new Error('not handled response filter');
     }
 

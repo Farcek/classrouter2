@@ -1,6 +1,6 @@
 
 import { Rootmeta, ControllerMeta, ActionClassMeta, ActionMethodMeta } from './metadata';
-import { HttpMethod, $types } from './common';
+import { HttpMethod } from './common';
 import { IMiddleware, IMiddlewareFactory, ILogger, IExpressRouter, IRouterBuilder, IExpressRequest, IExpressResponse, IExpressNext } from './interface';
 import { Lanchar } from './lanchar';
 
@@ -43,7 +43,6 @@ export class Builder {
 
     factoryBefores(befores: IMiddlewareFactory[]) {
         return befores.map(factory => {
-            // console.log('before factory', factory)
             return factory();
         })
     }

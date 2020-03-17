@@ -1,21 +1,24 @@
 import "reflect-metadata";
-import { ClassrouterFactory, JsonResponseFilter, $types, ILogger } from "src";
-import { aController } from "./a.controller";
 import express from 'express'
+
+
+import { ClassrouterFactory, JsonResponseFilter } from "src";
+import { aController } from "./a.controller";
+import { eController } from "./e.controller";
 
 
 async function startup() {
     let app = express();
     let factory = new ClassrouterFactory({
         basePath: '/api',
-        logger: (l: string, m: string, o: any) => console.log(l, m, o),
+        logger: (l: string, m: string, o: any) => console.log('eeeLog ::',l, m, o),
         routerBuilder: () => express.Router(),
-        controllers: [aController],
+        controllers: [aController, eController],
         responseFilters: {
             default: new JsonResponseFilter(),
             filters: [/*XML, Plan, File, */] // your custom response filters
         }
-    })
+    });
 
     factory.build(app);
 
@@ -25,13 +28,3 @@ async function startup() {
 }
 
 startup().catch(console.log);
-
-
-
-// let m = s.toMetajson();
-
-
-// var fs = require('fs');
-// fs.writeFile('myjsonfile.json', JSON.stringify(m, null, 4), 'utf8', (e:any)=>{
-//     console.log(e)
-// });

@@ -1,4 +1,5 @@
 import { HttpMethod, Paramtype } from "./common";
+import { Exception } from "@napp/exception";
 
 export interface Classtype {
     new(...args: any[]): any
@@ -140,4 +141,8 @@ export interface ILogger {
 
 export interface IRouterBuilder {
     (): IExpressRouter;
+}
+
+export interface IErrorParser {
+    (error:any): Exception;
 }

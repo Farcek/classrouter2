@@ -1,9 +1,9 @@
 
-import { Classtype, OController, IResponseFilter, ILogger, IRouterBuilder, IExpressRequest, IExpressResponse, IExpressNext } from "./interface";
+import { Classtype, OController, IResponseFilter, ILogger, IRouterBuilder, IExpressRequest, IExpressResponse, IExpressNext, IErrorParser } from "./interface";
 import { Rootmeta } from "./metadata";
 import { Builder } from "./builder";
 import { Lanchar } from "./lanchar";
-import { ExceptionConvert } from "@napp/exception";
+import { ExceptionConvert, Exception } from "@napp/exception";
 
 
 export interface PClassrouterFactory {
@@ -12,6 +12,7 @@ export interface PClassrouterFactory {
 
     logger: ILogger;
     routerBuilder: IRouterBuilder;
+    errorParser?: IErrorParser;
     responseFilters: {
         default: IResponseFilter,
         filters?: IResponseFilter[]
@@ -23,14 +24,21 @@ export class ClassrouterFactory {
     private root = new Rootmeta();
     private lanchar: Lanchar;
     private logger: ILogger;
+    errorParser: IErrorParser;
     private routerBuild: IRouterBuilder;
 
 
     constructor(options: PClassrouterFactory) {
         this.logger = options.logger;
         this.routerBuild = options.routerBuilder;
-        this.lanchar = new Lanchar(this.logger);
+        this.errorParser = options.errorParser || ((err: any) => ExceptionConvert(err))
+
+
         this._basePath = options.basePath;
+
+
+
+        this.lanchar = new Lanchar(this.logger, this.errorParser);
 
         for (let c of options.controllers) {
             this.root.registerController(c, '');
@@ -65,7 +73,7 @@ export class ClassrouterFactory {
         }
 
         app.use((err: any, req: IExpressRequest, res: IExpressResponse, next: IExpressNext) => {
-            let error = ExceptionConvert(err)
+            let error = this.errorParser(err)
             this.logger('error', error.message, error.toNameData())
 
             this.lanchar.response(error, req, res)

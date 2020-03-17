@@ -27,9 +27,6 @@ export const $metaname = {
 
 };
 
-export const $types = {
-    Logger : Symbol.for('logger'),
-}
 
 
 export enum HttpStatus {
