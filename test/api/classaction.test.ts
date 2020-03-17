@@ -5,10 +5,8 @@ import { assert } from "chai";
 import { http } from './http';
 
 @suite
-@only
 class ApiMethodClassAction {
-    @test
-    @only
+    @test    
     async actionclass() {
         let r: any = await http.get('/api/a-controller/a-action?id=4&name=farcek');
         assert.equal(r.n, 'a-action')

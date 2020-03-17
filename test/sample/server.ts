@@ -2,20 +2,18 @@ import "reflect-metadata";
 import { ClassrouterFactory, JsonResponseFilter, $types, ILogger } from "src";
 import { aController } from "./a.controller";
 import express from 'express'
-import { SampleLogger } from "./logger";
 
 
 async function startup() {
     let app = express();
     let factory = new ClassrouterFactory({
         basePath: '/api',
-        bind: (container) => {
-            container.bind<ILogger>($types.Logger).to(SampleLogger).inSingletonScope();
-        },
+        logger: (l: string, m: string, o: any) => console.log(l, m, o),
+        routerBuilder: () => express.Router(),
         controllers: [aController],
         responseFilters: {
             default: new JsonResponseFilter(),
-            filters: []
+            filters: [/*XML, Plan, File, */] // your custom response filters
         }
     })
 

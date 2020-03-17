@@ -1,5 +1,5 @@
 import { Get, Action, QueryParam, HeaderParam, CookieParam, ErrorHandle, IntPipe } from "src";
-import { injectable } from "inversify";
+
 
 
 @Get({ path: '/a-action', name: 'a-action' })

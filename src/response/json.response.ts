@@ -1,16 +1,18 @@
 import { IResponseFilter, IFilterParam } from '../interface'
-import { Exception, IHttpException, convertException } from '@napp/exception';
+import { Exception, ExceptionConvert } from '@napp/exception';
 export class JsonResponseFilter implements IResponseFilter {
     filter(param: IFilterParam) {
         let { actionResult, expressRes } = param;
         let err: any = actionResult;
         if (err instanceof Error) {
-            err = convertException(actionResult);
+            err = ExceptionConvert(actionResult);
         }
 
         if (err instanceof Exception) {
 
-            if ((err as any).status) {
+            let status = err.getDataValue('status');
+
+            if (typeof status === 'number' && status > 99 && status < 600) {
                 expressRes.status((err as any).status).json(err.toJson());
             } else {
                 expressRes.status(500).json(err.toJson());

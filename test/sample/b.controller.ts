@@ -1,5 +1,4 @@
 import { Controller, Get, Post, QueryParam } from "src";
-import { get } from "https";
 
 
 @Controller({

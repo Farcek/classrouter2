@@ -1,17 +1,17 @@
 
-import { Classtype, OController, IResponseFilter } from "./interface";
+import { Classtype, OController, IResponseFilter, ILogger, IRouterBuilder, IExpressRequest, IExpressResponse, IExpressNext } from "./interface";
 import { Rootmeta } from "./metadata";
-import * as express from "express";
-import { Container } from "inversify";
 import { Builder } from "./builder";
 import { Lanchar } from "./lanchar";
+import { ExceptionConvert } from "@napp/exception";
 
 
 export interface PClassrouterFactory {
     basePath?: string;
-    bind: (container: Container) => void;
-
     controllers: Classtype[];
+
+    logger: ILogger;
+    routerBuilder: IRouterBuilder;
     responseFilters: {
         default: IResponseFilter,
         filters?: IResponseFilter[]
@@ -21,13 +21,17 @@ export class ClassrouterFactory {
 
     private _basePath?: string;
     private root = new Rootmeta();
-    private container = new Container();
-    private lanchar = new Lanchar(this.container);
+    private lanchar: Lanchar;
+    private logger: ILogger;
+    private routerBuild: IRouterBuilder;
 
 
     constructor(options: PClassrouterFactory) {
+        this.logger = options.logger;
+        this.routerBuild = options.routerBuilder;
+        this.lanchar = new Lanchar(this.logger);
         this._basePath = options.basePath;
-        options.bind(this.container);
+
         for (let c of options.controllers) {
             this.root.registerController(c, '');
         }
@@ -37,8 +41,6 @@ export class ClassrouterFactory {
                 this.lanchar.responseFilters.push(f);
             }
         }
-
-
     }
 
     get basePath() {
@@ -50,11 +52,11 @@ export class ClassrouterFactory {
     }
 
 
-    build(app: express.Application) {
-        let build = new Builder(this.lanchar);
+    build(app: any) {
+        let build = new Builder(this.lanchar, this.logger, this.routerBuild);
 
         if (this.basePath) {
-            let route = express.Router();
+            let route = this.routerBuild();
 
             build.buildRoot(route, this.root);
             app.use(this.basePath, route);
@@ -62,14 +64,12 @@ export class ClassrouterFactory {
             build.buildRoot(app, this.root);
         }
 
-        app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-            console.log('---------------------------------------------------')
-            console.log(err)
-            console.log('---------------------------------------------------')
+        app.use((err: any, req: IExpressRequest, res: IExpressResponse, next: IExpressNext) => {
+            let error = ExceptionConvert(err)
+            this.logger('error', error.message, error.toNameData())
 
-            this.lanchar.response(err, req, res)
+            this.lanchar.response(error, req, res)
                 .catch(err => next(err))
-
         });
 
         return this.root;

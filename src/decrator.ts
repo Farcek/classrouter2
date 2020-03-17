@@ -1,12 +1,10 @@
 import { Classtype, OController, OAction, IPipeTransform, OActionMethod, OActionClass, OArgumentParam, OPropertyParam, OErrorMethod, OActionclassMethod } from "./interface";
 import { HttpMethod, Paramtype, $metaname } from "./common";
-import { injectable } from "inversify";
-import { ReflectClassmeta, decoratorFactoryClass, DecoratorType, decoratorFactoryMethodAndClass, decoratorFactoryMethod, decoratorFactoryArgumentAndProperty } from "@napp/reflect";
+import { decoratorFactoryClass, DecoratorType, decoratorFactoryMethodAndClass, decoratorFactoryMethod, decoratorFactoryArgumentAndProperty } from "@napp/reflect";
 
 export function Controller(option: OController) {
     return decoratorFactoryClass<void>((target, decoratorOption) => {
-        if (decoratorOption.decoratorType == DecoratorType.class) {
-            injectable()(target);
+        if (decoratorOption.decoratorType == DecoratorType.class) {            
             Reflect.defineMetadata($metaname.controller, option, target);
         }
     });
@@ -41,8 +39,7 @@ function httpAction(method: HttpMethod, option: OAction) {
                     option
                 };
 
-                Reflect.defineMetadata($metaname.actionClass, meta, target);
-                injectable()(target);
+                Reflect.defineMetadata($metaname.actionClass, meta, target);                
             } else {
                 //console.log(target, '->', option)
                 throw new Error('name param requared');
@@ -173,8 +170,7 @@ export function ErrorHandle(opt: { instanceOf?: Classtype, when?: { (errorType: 
                 methodname: decoratorOption.method.name
             };
 
-            if (!(m.instanceOf || m.when)) {
-                console.log("instanceOf or when Param requared", target)
+            if (!(m.instanceOf || m.when)) {                
                 throw new Error('instanceOf or when Param requared')
             }
 

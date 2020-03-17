@@ -72,22 +72,18 @@ export class UserController {
 
 async function startup() {
     let app = express();
-    app.use(morgan('dev'));
-
-    let factory = new ClassrouterFactory({        
-        bind: (container) => {
-            // InversifyJS DI container
-            container.bind<ILogger>($types.Logger).to(SampleLogger).inSingletonScope();
-        },
-        controllers: [HomeController, UserController],
+    let factory = new ClassrouterFactory({
+        basePath: '/api',
+        logger: (l: string, m: string, o: any) => console.log(l, m, o),
+        routerBuilder: () => express.Router(),
+        controllers: [aController],
         responseFilters: {
             default: new JsonResponseFilter(),
             filters: [/*XML, Plan, File, */] // your custom response filters
         }
-    });
+    })
 
     factory.build(app);
-
 
     app.listen(3000, () => {
         console.log('listen 3000');

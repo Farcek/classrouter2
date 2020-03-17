@@ -1,14 +1,13 @@
-import * as express from 'express';
-import { IFilterParam, Classtype, IPipeTransform, IResponseFilter, ILogger } from './interface';
+import { IFilterParam, Classtype, IPipeTransform, IResponseFilter, ILogger, IExpressRequest, IExpressResponse, IExpressNext } from './interface';
 import { ArgumentParamMeta, ActionMethodMeta, ActionClassMeta, PropertyParamMeta, MethodMeta } from './metadata';
 import { Paramtype, $types } from './common';
-import { Container } from 'inversify';
+
 
 
 
 export class Lanchar {
 
-    constructor(public container: Container) {
+    constructor(private logger: ILogger) {
 
     }
 
@@ -17,10 +16,8 @@ export class Lanchar {
     defaultResponse?: IResponseFilter;
     responseFilters: IResponseFilter[] = [];
 
-    get logger(): ILogger {
-        return this.container.get($types.Logger);
-    }
-    async response(actionResult: any, req: express.Request, res: express.Response) {
+
+    async response(actionResult: any, req: IExpressRequest, res: IExpressResponse) {
 
         let param: IFilterParam = {
             actionResult,
@@ -37,7 +34,7 @@ export class Lanchar {
             try {
                 await filter.filter(param);
             } catch (error) {
-                this.logger.error("the filter cannot send response", { actionResult, filter })
+                this.logger('error', "the filter cannot send response", { actionResult, filter })
                 throw error;
             }
 
@@ -51,7 +48,7 @@ export class Lanchar {
             try {
                 await this.defaultResponse.filter(param);
             } catch (error) {
-                this.logger.error("default filter cannot send response", { actionResult, filter: this.defaultResponse })
+                this.logger('error', "default filter cannot send response", { actionResult, filter: this.defaultResponse })
                 throw error;
             }
 
@@ -97,7 +94,7 @@ export class Lanchar {
         };
     }
 
-    resolveValue(type: Paramtype, fieldnames: string[], req: express.Request) {
+    resolveValue(type: Paramtype, fieldnames: string[], req: IExpressRequest) {
 
 
         if (type == Paramtype.Body) {
@@ -119,7 +116,7 @@ export class Lanchar {
         };
     }
 
-    async  propertiesInject(inst: any, propery: PropertyParamMeta[], req: express.Request) {
+    async  propertiesInject(inst: any, propery: PropertyParamMeta[], req: IExpressRequest) {
         for (let p of propery) {
             let starter = this.resolveValue(p.paramtype, p.reqFieldnames, req);
 
@@ -130,11 +127,11 @@ export class Lanchar {
         }
     }
     async  classaction(classMeta: ActionClassMeta,
-        req: express.Request,
-        res: express.Response,
-        next: express.NextFunction) {
+        req: IExpressRequest,
+        res: IExpressResponse,
+        next: IExpressNext) {
 
-        let ins = this.container.get(classMeta.Actionclass);
+        let ins = new classMeta.Actionclass();
 
         // console.log('333333 ', ins)
 
@@ -182,12 +179,12 @@ export class Lanchar {
 
 
     async  methodaction(actionmethodMeta: ActionMethodMeta,
-        req: express.Request,
-        res: express.Response,
-        next: express.NextFunction) {
+        req: IExpressRequest,
+        res: IExpressResponse,
+        next: IExpressNext) {
 
         //let ins = this.getCont(actionmethodMeta.fullname, actionmethodMeta.Controllerclass);
-        let ins = this.container.get(actionmethodMeta.Controllerclass);
+        let ins = new actionmethodMeta.Controllerclass();
         try {
 
             let r = await this.methodExecut(ins, { error: null }, actionmethodMeta.methodMeta, req)
@@ -223,7 +220,7 @@ export class Lanchar {
 
 
 
-    async  argumentBuild(argumentMetas: ArgumentParamMeta[], req: express.Request) {
+    async  argumentBuild(argumentMetas: ArgumentParamMeta[], req: IExpressRequest) {
 
         //console.log('argumentMetas', argumentMetas, req.body)
 
@@ -256,7 +253,7 @@ export class Lanchar {
         }
     }
 
-    async  methodExecut(ins: Object, errParam: { error: any }, meta: MethodMeta, req: express.Request) {
+    async  methodExecut(ins: Object, errParam: { error: any }, meta: MethodMeta, req: IExpressRequest) {
         let args = await this.argumentBuild(meta.argumentParams, req);
         if (errParam.error) {
             args[0] = errParam.error;
