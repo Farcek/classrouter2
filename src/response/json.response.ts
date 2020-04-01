@@ -13,7 +13,7 @@ export class JsonResponseFilter implements IResponseFilter {
             let status = err.getDataValue('status');
 
             if (typeof status === 'number' && status > 99 && status < 600) {
-                expressRes.status((err as any).status).json(err.toJson());
+                expressRes.status(status).json(err.toJson());
             } else {
                 expressRes.status(500).json(err.toJson());
             }
